@@ -1,0 +1,77 @@
+# General settings that apply to the daemon itself.
+[general]
+    # How long it should take, in seconds, before the daemon re-checks &
+    # updates the DDNS records. Note that if the addresses are unchanged,
+    # the DDNS service will not be consulted.
+    update_rate = 300
+
+# A list of IP addresses which will be used to update the DDNS records.
+#
+# You must specify the IP version for each of the entries.
+#
+# The supported methods for configuring those IP addresses are:
+#  - "interface"
+#  - "http"
+#
+# Those IP addresses are named (below, "name1" to "name3" are used). The
+# name can be whatever you want, even `[ip."世界"]` is perfectly reasonable.
+#
+# Each of the IP addresses have an internal error flag that is set when the
+# service fails (e.g. HTTP status code 500, or the iface IP fails to match
+# the netmask).
+[ip.name1]
+    version = 6
+    method = "interface"
+
+    # For the "interface" service, the available configuration options are:
+    # - iface: the IP address of this interface will be used.
+    # - matches: only use this IP address if it matches the netmask.
+    #            Defaults to "::/0" or "0/0".
+    iface = "wlan0"
+    matches = "2000::/3"
+
+[ip.name2]
+    version = 4
+    method = "interface"
+
+    # For the "interface" service, the available configuration options are:
+    # - iface: the IP address of this interface will be used.
+    # - matches: only use this IP address if it matches the netmask.
+    #            Defaults to "::/0" or "0/0".
+    iface = "wlan0"
+    matches = "192.168.1.0/24"
+
+[ip.name3]
+    version = 6
+    method = "http"
+
+    # For the "http" service, the available configuration options are:
+    #  - url: connect to this URL and send a HTTP GET request to obtain the
+    #         external IP address.
+    #  - regex: run this regular expression on the HTTP response, the first
+    #           capture group will be the IP address.
+    url = "https://api6.ipify.org/"
+    regex = "(.*)"
+
+[ip.name4]
+    version = 4
+    method = "http"
+
+    url = "https://api4.ipify.org/"
+    regex = "(.*)"
+
+# Configuration of DDNS services.
+#
+# Just like IP addresses, the service entries are named.
+#
+# Within each DDNS entry, the "service" and "ip" option are provided. Multiple
+# IP addresses are allowed in those two options, if the first IP address is
+# unusable (an error flag is set) then the next one will be attempted.
+#
+[ddns.name1]
+    service = "cloudflare-v4"
+    ip = ["name1", "name2", "name3"]
+    token = ""
+    ttl = 300
+    proxied = true
+    domains = ["www.example.com"]
