@@ -79,6 +79,78 @@ mod os {
         ip_addrs
     }
 
+    fn get_deprecated_v6_addresses(iface: &str) -> Vec<Ipv6Addr> {
+        let mut addresses = Vec::new();
+
+        // Prevent #[unused] warnings on non-Linux unixes
+        let _ = iface;
+
+        // TODO: I have no idea how to do this on BSDs.
+        //
+        // Also, the loop below is just a poor man's goto: there is only one
+        // iteration and "break" simply means "jump to the end of this block".
+        #[cfg(target_os = "linux")]
+        loop {
+            use std::fs::File;
+            use std::io::Read;
+
+            let Ok(mut file) = File::open("/proc/net/if_inet6") else {
+                break;
+            };
+
+            let mut content = String::new();
+            let Ok(_) = file.read_to_string(&mut content) else {
+                break;
+            };
+
+            // Here is an example line in /proc/net/if_inet6:
+            //
+            // 00000000000000000000000000000001 01 80 10 80       lo
+            //
+            // We want the first column (the address), the 5th column (the
+            // IPv6 address flags), and the final column for iface check.
+
+            for line in content.lines() {
+                let mut split = line.split_whitespace();
+
+                // Note, this consumes an element...
+                let Some(address) = split.nth(0) else {
+                    continue;
+                };
+
+                // ... so that's why this is not nth(4).
+                let Some(flags) = split.nth(3) else { continue };
+
+                let Some(inet_iface) = split.nth(0) else {
+                    continue;
+                };
+
+                if inet_iface.trim() != iface {
+                    continue;
+                }
+
+                let Ok(address) = u128::from_str_radix(address, 16) else {
+                    continue;
+                };
+
+                let Ok(flags) = u8::from_str_radix(flags, 16) else {
+                    continue;
+                };
+
+                // Defined in <linux/if_addr.h>:
+                const IFA_F_DEPRECATED: u8 = 0x20;
+
+                if flags & IFA_F_DEPRECATED > 0 {
+                    addresses.push(Ipv6Addr::from(address))
+                }
+            }
+
+            break;
+        }
+
+        addresses
+    }
+
     pub fn get_interface_v4_addresses(iface: &str, mask: &NetworkV4) -> Option<Ipv4Addr> {
         let mut result = None;
 
@@ -95,9 +167,15 @@ mod os {
     pub fn get_interface_v6_addresses(iface: &str, mask: &NetworkV6) -> Option<Ipv6Addr> {
         let mut result = None;
 
+        let deprecated = get_deprecated_v6_addresses(iface);
+
         for addr in transverse_ifaddr(iface) {
             match addr {
-                IpAddr::V6(v6) if mask.in_range(v6) => result = Some(v6),
+                IpAddr::V6(v6) => {
+                    if mask.in_range(v6) && deprecated.iter().find(|ip| **ip == v6).is_none() {
+                        result = Some(v6)
+                    }
+                }
                 _ => (),
             }
         }
