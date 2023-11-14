@@ -69,8 +69,42 @@ impl<T: Copy, const N: usize> FixedVec<T, N> {
     }
 
     pub fn as_slice(&self) -> &[T] {
+        // CAST-SAFETY: MaybeUninit<T> is sized & aligned the same as T          
         let ptr = self.array.as_ptr() as *const T;
         let len = self.length;
+
+        // SAFETY: The properties of self.length (increment-on-push) guarantees
+        //         that all indices before self.length contain valid items
         unsafe { std::slice::from_raw_parts(ptr, len as usize) }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::util::FixedVec;
+
+    #[test]
+    fn fixed_vec() {
+        let mut vec = FixedVec::<u32, 2>::new();
+        assert!(vec.push(10).is_none());
+        assert!(vec.push(20).is_none());
+        assert!(!vec.push(30).is_none());
+        
+        assert!(vec.get(0).is_some());
+        assert!(vec.get(1).is_some());
+        assert!(!vec.get(2).is_some());
+        assert!(!vec.get(12345678).is_some());
+
+        assert_eq!(vec.as_slice().len(), 2);
+
+        let mut vec = FixedVec::<u32, 2>::new();
+        assert_eq!(vec.as_slice().len(), 0);
+        assert!(vec.push(10).is_none());
+        assert_eq!(vec.as_slice().len(), 1);
+        assert!(vec.push(20).is_none());
+        assert_eq!(vec.as_slice().len(), 2);
+        assert!(!vec.push(30).is_none());
+        assert_eq!(vec.as_slice().len(), 2);
+    }
+}
+ 
