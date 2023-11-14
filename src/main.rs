@@ -17,7 +17,7 @@ use crate::services::cloudflare;
 const CONFIG_PATHS: [&'static str; 2] = [
     "./config.toml",
     #[cfg(target_family = "unix")]
-    "/etc/config.toml",
+    "/etc/dynners/config.toml",
 ];
 
 static GENERAL_CONFIG: OnceLock<General> = OnceLock::new();
