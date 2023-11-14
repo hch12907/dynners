@@ -75,7 +75,9 @@
 # IP addresses are allowed in those two options, if the first IP address is
 # unusable (an error flag is set) then the next one will be attempted.
 #
-[ddns.name1]
+# The configuration options will be provided below. 
+# 
+[ddns."cloudflare-example"]
     service = "cloudflare-v4"
     ip = ["name1", "name2", "name3"]
     token = ""
@@ -83,9 +85,14 @@
     proxied = true
     domains = ["www.example.com"]
 
-[ddns."whatever"]
+[ddns."no-ip-example"]
     service = "no-ip"
     ip = ["name1", "name2"]
     username = "your.email@example.com"
     password = ""
     domains = "example.com"
+
+[ddns."hello, this is a dummy!"]
+    service = "dummy"
+    ip = ["name1", "name2"]
+    domains = "example.dummy"

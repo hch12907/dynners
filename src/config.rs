@@ -60,6 +60,7 @@ pub struct IpConfig {
 pub enum DdnsConfigService {
     CloudflareV4(services::cloudflare::Config),
     NoIp(services::noip::Config),
+    Dummy(services::dummy::Config),
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq)]

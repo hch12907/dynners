@@ -10,7 +10,7 @@ use std::sync::OnceLock;
 use std::time::Duration;
 
 use config::{Config, DdnsConfigService, General};
-use services::{DdnsService, noip};
+use services::{DdnsService, noip, dummy};
 
 use crate::services::cloudflare;
 
@@ -99,6 +99,10 @@ fn main() {
 
             DdnsConfigService::NoIp(np) => {
                 Box::new(noip::Service::from_config(np.clone()))
+            }
+
+            DdnsConfigService::Dummy(dm) => {
+                Box::new(dummy::Service::from_config(dm.clone()))
             }
         };
 

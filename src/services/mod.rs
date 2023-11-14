@@ -1,5 +1,6 @@
 pub mod cloudflare;
 pub mod noip;
+pub mod dummy;
 
 use std::net::IpAddr;
 
