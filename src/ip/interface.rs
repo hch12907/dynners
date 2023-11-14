@@ -111,7 +111,7 @@ mod os {
             // IPv6 address flags), and the final column for iface check.
 
             for line in content.lines() {
-                let mut split = line.split_whitespace();
+                let mut split = line.split_ascii_whitespace();
 
                 // Note, this consumes an element...
                 let Some(address) = split.nth(0) else {
