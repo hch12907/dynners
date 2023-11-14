@@ -5,6 +5,9 @@
     # the DDNS service will not be consulted.
     update_rate = 300
 
+    # The user agent which will be used by all HTTP requests.
+    user_agent = ""
+
 # A list of IP addresses which will be used to update the DDNS records.
 #
 # You must specify the IP version for each of the entries.

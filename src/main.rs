@@ -6,6 +6,7 @@ mod util;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
+use std::sync::OnceLock;
 use std::time::Duration;
 
 use config::{Config, DdnsConfigService};
@@ -13,10 +14,32 @@ use services::DdnsService;
 
 use crate::services::cloudflare;
 
+const CONFIG_PATHS: [&'static str; 2] = [
+    "./config.toml",
+    #[cfg(target_family = "unix")]
+    "/etc/config.toml",
+];
+
+static USER_AGENT: OnceLock<Box<str>> = OnceLock::new();
+
 fn main() {
-    let mut file = File::open("config.toml").unwrap();
     let mut config = String::new();
-    file.read_to_string(&mut config).unwrap();
+    for path in CONFIG_PATHS {
+        let mut file = match File::open(path) {
+            Ok(f) => f,
+            Err(_) => continue,
+        };
+
+        match file.read_to_string(&mut config) {
+            Ok(_) => break,
+            Err(e) => println!("Unable to read config file, reason: {}", e.to_string()),
+        }
+    }
+
+    if config.is_empty() {
+        println!("No configuration found. Quitting.");
+        return;
+    }
 
     // Parsing the config file
     let config = match toml::from_str::<Config>(config.as_str()) {
@@ -24,12 +47,20 @@ fn main() {
         Err(e) => return println!("{}", e.to_string()),
     };
 
+    // It's safe to unwrap here - the program is single-threaded and USER_AGENT
+    // is never initialized before reaching this point of program.
+    USER_AGENT.set(config.general.user_agent).unwrap();
+
     // Collect IP addresses specified in [ip.*] entries into (ip name, ip)
-    let mut ips = config
-        .ip
-        .into_iter()
-        .map(|(name, ip)| (name, ip::DynamicIp::from_config(&ip).unwrap()))
-        .collect::<HashMap<_, _>>();
+    let mut ips = HashMap::with_capacity(config.ip.len());
+    for (name, ip) in config.ip.into_iter() {
+        let dyn_ip = match ip::DynamicIp::from_config(&ip) {
+            Ok(d) => d,
+            Err(e) => return println!("Unable to parse IP configuration: {}", e.to_string()),
+        };
+
+        ips.insert(name, dyn_ip);
+    }
 
     // Collect IP addresses specified in [ddns.*] entries into (ddns name, ip)
     let service_ips = config
@@ -82,7 +113,7 @@ fn main() {
         for (name, service) in services.iter_mut() {
             for ip in service_ips[name] {
                 if !ips[ip].is_dirty() {
-                    continue
+                    continue;
                 }
 
                 if let Some(addr) = ips[ip].address() {
@@ -99,7 +130,7 @@ fn main() {
         if let Some(sleep_for) = &config.general.update_rate {
             std::thread::sleep(Duration::from_secs(sleep_for.get() as u64));
         } else {
-            break // 0 timeout makes this a fire-once program.
+            break; // 0 timeout makes this a fire-once program.
         }
     }
 }

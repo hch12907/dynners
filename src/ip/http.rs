@@ -3,8 +3,13 @@ use std::net::{Ipv4Addr, Ipv6Addr};
 use regex::Regex;
 use ureq::Error;
 
+use crate::USER_AGENT;
+
 pub(super) fn get_address_v4(url: &str, regex: &Regex) -> Result<Ipv4Addr, String> {
-    let response = match ureq::get(url).call() {
+    let response = match ureq::get(url)
+        .set("User-Agent", USER_AGENT.get().unwrap())
+        .call()
+    {
         Ok(r) => r,
         Err(Error::Status(code, response)) => {
             Err(code.to_string() + &response.into_string().unwrap_or_default())?
@@ -26,7 +31,10 @@ pub(super) fn get_address_v4(url: &str, regex: &Regex) -> Result<Ipv4Addr, Strin
 }
 
 pub(super) fn get_address_v6(url: &str, regex: &Regex) -> Result<Ipv6Addr, String> {
-    let response = match ureq::get(url).call() {
+    let response = match ureq::get(url)
+        .set("User-Agent", USER_AGENT.get().unwrap())
+        .call()
+    {
         Ok(r) => r,
         Err(Error::Status(code, response)) => {
             Err(code.to_string() + &response.into_string().unwrap_or_default())?

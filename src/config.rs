@@ -10,6 +10,7 @@ use crate::util::one_or_more_string;
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq)]
 pub struct General {
     pub update_rate: Option<NonZeroU32>,
+    pub user_agent: Box<str>,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq)]
