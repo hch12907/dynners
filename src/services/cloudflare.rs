@@ -3,7 +3,7 @@ use std::net::IpAddr;
 use serde_derive::{Deserialize, Serialize};
 use ureq::Response;
 
-use crate::USER_AGENT;
+use crate::GENERAL_CONFIG;
 
 use super::{one_or_more_string, DdnsService, DdnsUpdateError};
 
@@ -114,7 +114,7 @@ impl Service {
 
     fn get_zones(&self) -> Result<Vec<ZoneId>, DdnsUpdateError> {
         let response = ureq::get("https://api.cloudflare.com/client/v4/zones/")
-            .set("User-Agent", USER_AGENT.get().unwrap())
+            .set("User-Agent", &GENERAL_CONFIG.get().unwrap().user_agent)
             .set("Content-Type", "application/json")
             .set("Authorization", &self.config.token)
             .call();
@@ -176,7 +176,7 @@ impl Service {
         );
 
         let response = ureq::get(&url)
-            .set("User-Agent", USER_AGENT.get().unwrap())
+            .set("User-Agent", &GENERAL_CONFIG.get().unwrap().user_agent)
             .set("Content-Type", "application/json")
             .set("Authorization", &self.config.token)
             .call();
@@ -238,7 +238,7 @@ impl Service {
         );
 
         let response = ureq::put(&url)
-            .set("User-Agent", USER_AGENT.get().unwrap())
+            .set("User-Agent", &GENERAL_CONFIG.get().unwrap().user_agent)
             .set("Authorization", &self.config.token)
             .send_json(ureq::json!({
                 "content": ip.to_string(),

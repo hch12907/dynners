@@ -1,13 +1,17 @@
 use std::net::{Ipv4Addr, Ipv6Addr};
 
+#[cfg(feature = "regex")]
 use regex::Regex;
 use ureq::Error;
 
-use crate::USER_AGENT;
+use crate::GENERAL_CONFIG;
 
-pub(super) fn get_address_v4(url: &str, regex: &Regex) -> Result<Ipv4Addr, String> {
+pub(super) fn get_address_v4(
+    url: &str,
+    #[cfg(feature = "regex")] regex: &Regex,
+) -> Result<Ipv4Addr, String> {
     let response = match ureq::get(url)
-        .set("User-Agent", USER_AGENT.get().unwrap())
+        .set("User-Agent", &GENERAL_CONFIG.get().unwrap().user_agent)
         .call()
     {
         Ok(r) => r,
@@ -19,6 +23,7 @@ pub(super) fn get_address_v4(url: &str, regex: &Regex) -> Result<Ipv4Addr, Strin
 
     let text = response.into_string().map_err(|e| e.to_string())?;
 
+    #[cfg(feature = "regex")]
     let addr = regex
         .captures(text.as_str())
         .and_then(|captured| captured.get(1))
@@ -26,13 +31,19 @@ pub(super) fn get_address_v4(url: &str, regex: &Regex) -> Result<Ipv4Addr, Strin
         .ok_or_else(|| {
             String::from("the following HTTP response does not match regex: ") + &text
         })?;
+
+    #[cfg(not(feature = "regex"))]
+    let addr = text.trim();
 
     addr.parse::<Ipv4Addr>().map_err(|e| e.to_string())
 }
 
-pub(super) fn get_address_v6(url: &str, regex: &Regex) -> Result<Ipv6Addr, String> {
+pub(super) fn get_address_v6(
+    url: &str,
+    #[cfg(feature = "regex")] regex: &Regex,
+) -> Result<Ipv6Addr, String> {
     let response = match ureq::get(url)
-        .set("User-Agent", USER_AGENT.get().unwrap())
+        .set("User-Agent", &GENERAL_CONFIG.get().unwrap().user_agent)
         .call()
     {
         Ok(r) => r,
@@ -44,6 +55,7 @@ pub(super) fn get_address_v6(url: &str, regex: &Regex) -> Result<Ipv6Addr, Strin
 
     let text = response.into_string().map_err(|e| e.to_string())?;
 
+    #[cfg(feature = "regex")]
     let addr = regex
         .captures(text.as_str())
         .and_then(|captured| captured.get(1))
@@ -51,6 +63,9 @@ pub(super) fn get_address_v6(url: &str, regex: &Regex) -> Result<Ipv6Addr, Strin
         .ok_or_else(|| {
             String::from("the following HTTP response does not match regex: ") + &text
         })?;
+
+    #[cfg(not(feature = "regex"))]
+    let addr = text.trim();
 
     addr.parse::<Ipv6Addr>().map_err(|e| e.to_string())
 }

@@ -5,6 +5,10 @@
     # the DDNS service will not be consulted.
     update_rate = 300
 
+    # The shell which will be used by the "exec" IP configuration method,
+    # By default this is going to be Bash.
+    shell = "/bin/bash"
+
     # The user agent which will be used by all HTTP requests.
     user_agent = ""
 
@@ -13,6 +17,7 @@
 # You must specify the IP version for each of the entries.
 #
 # The supported methods for configuring those IP addresses are:
+#  - "exec"
 #  - "interface"
 #  - "http"
 #
@@ -20,7 +25,7 @@
 # name can be whatever you want, even `[ip."世界"]` is perfectly reasonable.
 #
 # Each of the IP addresses have an internal error flag that is set when the
-# service fails (e.g. HTTP status code 500, or the iface IP fails to match
+# method fails (e.g. HTTP status code 500, or the iface IP fails to match
 # the netmask).
 [ip.name1]
     version = 6
@@ -35,14 +40,13 @@
 
 [ip.name2]
     version = 4
-    method = "interface"
+    method = "exec"
 
-    # For the "interface" service, the available configuration options are:
-    # - iface: the IP address of this interface will be used.
-    # - matches: only use this IP address if it matches the netmask.
-    #            Defaults to "::/0" or "0/0".
-    iface = "wlan0"
-    matches = "192.168.1.0/24"
+    # For the "exec" service, the available configuration options are:
+    # - command: the command which will be executed. The stdout is expected
+    #            to be an IP address.
+    command = "natpmpc | grep 'Public IP' | cut -d ' ' -f5"
+
 
 [ip.name3]
     version = 6
@@ -53,6 +57,7 @@
     #         external IP address.
     #  - regex: run this regular expression on the HTTP response, the first
     #           capture group will be the IP address.
+    #           (NOTE: only available when compiled with the feature "regex")
     url = "https://api6.ipify.org/"
     regex = "(.*)"
 

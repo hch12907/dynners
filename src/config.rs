@@ -10,6 +10,9 @@ use crate::util::one_or_more_string;
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq)]
 pub struct General {
     pub update_rate: Option<NonZeroU32>,
+    #[serde(default = "default_shell")]
+    pub shell: Box<str>,
+    #[serde(default)]
     pub user_agent: Box<str>,
 }
 
@@ -17,6 +20,10 @@ pub struct General {
 #[serde(tag = "method")]
 #[serde(rename_all = "lowercase")]
 pub enum IpConfigMethod {
+    Exec {
+        command: Box<str>,
+    },
+
     Interface {
         iface: Box<str>,
         matches: Box<str>,
@@ -24,6 +31,8 @@ pub enum IpConfigMethod {
 
     Http {
         url: Box<str>,
+
+        #[cfg(feature = "regex")]
         #[serde(default = "default_regex")]
         regex: Box<str>,
     },
@@ -66,6 +75,11 @@ pub struct Config {
     pub ddns: HashMap<Box<str>, DdnsConfig>,
 }
 
+fn default_shell() -> Box<str> {
+    "/bin/bash".into()
+}
+
+#[cfg(feature = "regex")]
 fn default_regex() -> Box<str> {
-    "(.*)".to_string().into_boxed_str()
+    "(.*)".into()
 }

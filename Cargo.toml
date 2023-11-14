@@ -5,9 +5,12 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+regex = ["dep:regex"]
+
 [dependencies]
 libc = "^0.2.150"
-regex = "^1.10.2"
+regex = { version = "^1.10.2", optional = true }
 serde = "^1.0.192"
 serde_derive = "^1.0.192"
 serde_json = "^1.0.108"

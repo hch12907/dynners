@@ -9,7 +9,7 @@ use std::io::Read;
 use std::sync::OnceLock;
 use std::time::Duration;
 
-use config::{Config, DdnsConfigService};
+use config::{Config, DdnsConfigService, General};
 use services::DdnsService;
 
 use crate::services::cloudflare;
@@ -20,7 +20,7 @@ const CONFIG_PATHS: [&'static str; 2] = [
     "/etc/config.toml",
 ];
 
-static USER_AGENT: OnceLock<Box<str>> = OnceLock::new();
+static GENERAL_CONFIG: OnceLock<General> = OnceLock::new();
 
 fn main() {
     let mut config = String::new();
@@ -47,9 +47,11 @@ fn main() {
         Err(e) => return println!("{}", e.to_string()),
     };
 
+    let update_rate = config.general.update_rate;
+
     // It's safe to unwrap here - the program is single-threaded and USER_AGENT
     // is never initialized before reaching this point of program.
-    USER_AGENT.set(config.general.user_agent).unwrap();
+    GENERAL_CONFIG.set(config.general).unwrap();
 
     // Collect IP addresses specified in [ip.*] entries into (ip name, ip)
     let mut ips = HashMap::with_capacity(config.ip.len());
@@ -127,7 +129,7 @@ fn main() {
             }
         }
 
-        if let Some(sleep_for) = &config.general.update_rate {
+        if let Some(sleep_for) = &update_rate {
             std::thread::sleep(Duration::from_secs(sleep_for.get() as u64));
         } else {
             break; // 0 timeout makes this a fire-once program.
