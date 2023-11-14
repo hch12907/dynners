@@ -1,4 +1,5 @@
 pub mod cloudflare;
+pub mod noip;
 
 use std::net::IpAddr;
 
@@ -15,10 +16,13 @@ pub enum DdnsUpdateError {
     #[error("Cloudflare returned erroneous JSON: {0}")]
     CloudflareJson(Box<str>),
 
+    #[error("NoIP returned error: {0}")]
+    NoIp(Box<str>),
+
     #[error("HTTP transport error: {0}")]
     TransportError(Box<str>),
 }
 
 pub trait DdnsService {
-    fn update_record(&mut self, ip: &IpAddr) -> Result<(), DdnsUpdateError>;
+    fn update_record(&mut self, ip: &[IpAddr]) -> Result<FixedVec<IpAddr, 2>, DdnsUpdateError>;
 }

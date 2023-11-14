@@ -9,6 +9,7 @@ edition = "2021"
 regex = ["dep:regex"]
 
 [dependencies]
+data-encoding = "2.4.0"
 libc = "^0.2.150"
 regex = { version = "^1.10.2", optional = true }
 serde = "^1.0.192"

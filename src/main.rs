@@ -10,7 +10,7 @@ use std::sync::OnceLock;
 use std::time::Duration;
 
 use config::{Config, DdnsConfigService, General};
-use services::DdnsService;
+use services::{DdnsService, noip};
 
 use crate::services::cloudflare;
 
@@ -90,14 +90,19 @@ fn main() {
     }
 
     // Initialize each DDNS service entry into a `services` array
-    let mut services = Vec::<(&Box<str>, Box<dyn DdnsService>)>::new();
+    let mut services = Vec::new();
     for (name, service) in &config.ddns {
-        match &service.service {
+        let service: Box<dyn DdnsService> = match &service.service {
             DdnsConfigService::CloudflareV4(cf) => {
-                let service = cloudflare::Service::from_config(cf.clone());
-                services.push((name, Box::new(service)));
+                Box::new(cloudflare::Service::from_config(cf.clone()))
             }
-        }
+
+            DdnsConfigService::NoIp(np) => {
+                Box::new(noip::Service::from_config(np.clone()))
+            }
+        };
+
+        services.push((name, service))
     }
 
     // Main loop here
@@ -113,20 +118,32 @@ fn main() {
         }
 
         for (name, service) in services.iter_mut() {
-            for ip in service_ips[name] {
-                if !ips[ip].is_dirty() {
-                    continue;
-                }
+            let ips = service_ips[name]
+                .iter()
+                .map(|name| &ips[name])
+                .filter(|ip| ip.is_dirty() && ip.address().is_some())
+                .map(|ip| *ip.address().unwrap())
+                .collect::<Vec<_>>(); // TODO: use collect_into in the future
 
-                if let Some(addr) = ips[ip].address() {
-                    if let Err(e) = service.update_record(addr) {
-                        println!("[ERROR] DDNS service {} failed, reason: {}", name, e)
-                    } else {
-                        println!("[INFO] Updated DDNS service {} with IP {}", name, addr);
-                        break;
+            match service.update_record(ips.as_slice()) {
+                Ok(updated) => {
+                    for ip in updated.as_slice() {
+                        println!("[INFO] Updated DDNS service {} with IP {}", name, ip);
+                    }
+
+                    if updated.as_slice().is_empty() {
+                        println!("[INFO] Tried to update DDNS service {}, but no changes were made", name);
                     }
                 }
-            }
+
+                Err(e) => {
+                    println!(
+                        "[ERROR] DDNS service {} failed, reason: {}",
+                        name,
+                        e.to_string()
+                    )
+                }
+            };
         }
 
         if let Some(sleep_for) = &update_rate {

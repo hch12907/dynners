@@ -10,7 +10,7 @@
     shell = "/bin/bash"
 
     # The user agent which will be used by all HTTP requests.
-    user_agent = ""
+    user_agent = "dynners 0.1.0/Linux-6.1"
 
 # A list of IP addresses which will be used to update the DDNS records.
 #
@@ -47,7 +47,6 @@
     #            to be an IP address.
     command = "natpmpc | grep 'Public IP' | cut -d ' ' -f5"
 
-
 [ip.name3]
     version = 6
     method = "http"
@@ -83,3 +82,10 @@
     ttl = 300
     proxied = true
     domains = ["www.example.com"]
+
+[ddns."whatever"]
+    service = "no-ip"
+    ip = ["name1", "name2"]
+    username = "your.email@example.com"
+    password = ""
+    domains = "example.com"

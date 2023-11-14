@@ -4,6 +4,7 @@ use serde_derive::{Deserialize, Serialize};
 use ureq::Response;
 
 use crate::GENERAL_CONFIG;
+use crate::util::FixedVec;
 
 use super::{one_or_more_string, DdnsService, DdnsUpdateError};
 
@@ -255,7 +256,7 @@ impl Service {
 }
 
 impl DdnsService for Service {
-    fn update_record(&mut self, ip: &IpAddr) -> Result<(), DdnsUpdateError> {
+    fn update_record(&mut self, ips: &[IpAddr]) -> Result<FixedVec<IpAddr, 2>, DdnsUpdateError> {
         if self.cached_records.is_empty() {
             for zone in self.get_zones()? {
                 for record in self.get_records(zone)? {
@@ -266,14 +267,25 @@ impl DdnsService for Service {
             }
         }
 
+        let ipv4 = ips.iter().find(|ip| ip.is_ipv4());
+        let ipv6 = ips.iter().find(|ip| ip.is_ipv6());
+
         for record in &self.cached_records {
-            if (record.kind == RecordKind::A && ip.is_ipv4())
-                || (record.kind == RecordKind::Aaaa && ip.is_ipv6())
-            {
-                self.put_record(&record, *ip)?;
+            if record.kind == RecordKind::A && ipv4.is_some() {
+                self.put_record(&record, *ipv4.unwrap())?;
+            } else if record.kind == RecordKind::Aaaa && ipv6.is_some() {
+                self.put_record(&record, *ipv6.unwrap())?;
             }
         }
 
-        Ok(())
+        let mut result = FixedVec::new();
+        if ipv4.is_some() {
+            result.push(*ipv4.unwrap());
+        }
+        if ipv6.is_some() {
+            result.push(*ipv6.unwrap());
+        }
+
+        Ok(result)
     }
 }

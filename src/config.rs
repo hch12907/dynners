@@ -57,6 +57,7 @@ pub struct IpConfig {
 #[serde(rename_all = "kebab-case")]
 pub enum DdnsConfigService {
     CloudflareV4(services::cloudflare::Config),
+    NoIp(services::noip::Config),
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq)]
