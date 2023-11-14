@@ -82,6 +82,12 @@ impl IpService {
                 Ok(Self::ExecV4 { command: command.clone() }),
 
             (IpVersion::V4, IpConfigMethod::Interface { iface, matches }) => {
+                let matches = if matches.is_empty() {
+                    "0.0.0.0/0"
+                } else {
+                    matches.as_ref()
+                };
+
                 let matches = matches
                     .trim()
                     .parse::<NetworkV4>()
@@ -110,6 +116,12 @@ impl IpService {
                 Ok(Self::ExecV6 { command: command.clone() }),
 
             (IpVersion::V6, IpConfigMethod::Interface { iface, matches }) => {
+                let matches = if matches.is_empty() {
+                    "::/0"
+                } else {
+                    matches.as_ref()
+                };
+
                 let matches = matches
                     .trim()
                     .parse::<NetworkV6>()

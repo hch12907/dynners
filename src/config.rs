@@ -26,6 +26,8 @@ pub enum IpConfigMethod {
 
     Interface {
         iface: Box<str>,
+
+        #[serde(default)]
         matches: Box<str>,
     },
 
