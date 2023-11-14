@@ -122,10 +122,19 @@ fn main() {
         }
 
         for (name, service) in services.iter_mut() {
+            let is_dirty = service_ips[name]
+                .iter()
+                .map(|name| &ips[name])
+                .any(|ip| ip.is_dirty());
+
+            if !is_dirty {
+                continue
+            }
+
             let ips = service_ips[name]
                 .iter()
                 .map(|name| &ips[name])
-                .filter(|ip| ip.is_dirty() && ip.address().is_some())
+                .filter(|ip| ip.address().is_some())
                 .map(|ip| *ip.address().unwrap())
                 .collect::<Vec<_>>(); // TODO: use collect_into in the future
 
