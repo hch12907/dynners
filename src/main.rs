@@ -64,6 +64,11 @@ fn main() {
         ips.insert(name, dyn_ip);
     }
 
+    if ips.is_empty() {
+        println!("No IPs were configured. Quitting.");
+        return;
+    }
+
     // Collect IP addresses specified in [ddns.*] entries into (ddns name, ip)
     let service_ips = config
         .ddns

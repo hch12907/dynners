@@ -1,5 +1,6 @@
 pub mod cloudflare;
 pub mod noip;
+pub mod shared_dyndns;
 pub mod dummy;
 
 use std::net::IpAddr;
@@ -7,6 +8,24 @@ use std::net::IpAddr;
 use thiserror::Error;
 
 use crate::util::*;
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Suspension {
+    // If the number of cycles is zero, the service proceeds as normal
+    Cycles(u32),
+
+    // Once suspended, the service is not updated until end of program
+    Indefinite,
+}
+
+impl std::fmt::Display for Suspension {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Suspension::Cycles(u) => write!(f, "{} cycle(s) left", u),
+            Suspension::Indefinite => write!(f, "indefinitely"),
+        }
+    }
+}
 
 #[derive(Clone, Error, Debug)]
 pub enum DdnsUpdateError {
@@ -17,8 +36,11 @@ pub enum DdnsUpdateError {
     #[error("Cloudflare returned erroneous JSON: {0}")]
     CloudflareJson(Box<str>),
 
-    #[error("NoIP returned error: {0}")]
-    NoIp(Box<str>),
+    #[error("{0} returned error: {1}")]
+    DynDns(&'static str, Box<str>),
+
+    #[error("the daemon has suspended updating this service ({0})")]
+    Suspended(Suspension),
 
     #[error("HTTP transport error: {0}")]
     TransportError(Box<str>),
