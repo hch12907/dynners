@@ -36,6 +36,8 @@
     # - iface: the IP address of this interface will be used.
     # - matches: only use this IP address if it matches the netmask.
     #            Defaults to "::/0" or "0/0".
+    #            Note that non-CIDR notation can also be used: "::/::ffff"
+    #            matches all IPv6 addresses ending with 0000.
     iface = "wlan0"
     matches = "2000::/3"
 
