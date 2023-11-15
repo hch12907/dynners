@@ -3,8 +3,8 @@ use std::net::IpAddr;
 use serde_derive::{Deserialize, Serialize};
 use ureq::Response;
 
-use crate::GENERAL_CONFIG;
 use crate::util::FixedVec;
+use crate::GENERAL_CONFIG;
 
 use super::{one_or_more_string, DdnsService, DdnsUpdateError};
 
@@ -86,11 +86,11 @@ impl Service {
         let response = match response {
             Ok(r) => r
                 .into_json::<serde_json::Value>()
-                .map_err(|e| DdnsUpdateError::CloudflareJson(e.to_string().into()))?,
+                .map_err(|e| DdnsUpdateError::Json(e.to_string().into()))?,
             Err(ureq::Error::Status(_, resp)) => {
                 let (code, message) = self.parse_error(resp).map_err(|ref e| {
                     let error = String::from("(!!) unexpected error message structure - ");
-                    DdnsUpdateError::CloudflareJson((error + e).into_boxed_str())
+                    DdnsUpdateError::Json((error + e).into_boxed_str())
                 })?;
                 Err(DdnsUpdateError::Cloudflare(code, message.into()))?
             }
@@ -105,7 +105,7 @@ impl Service {
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
         if !success {
-            return Err(DdnsUpdateError::CloudflareJson(
+            return Err(DdnsUpdateError::Json(
                 "cloudflare returned success=false?".into(),
             ));
         };
@@ -124,16 +124,14 @@ impl Service {
 
         let results = response.get("result").and_then(|v| v.as_array());
         let Some(zones) = results else {
-            return Err(DdnsUpdateError::CloudflareJson(
-                "cloudflare returned 0 zones".into(),
-            ));
+            return Err(DdnsUpdateError::Json("cloudflare returned 0 zones".into()));
         };
 
         let mut zone_ids = Vec::with_capacity(zones.len());
 
         for zone in zones {
             let Some(id) = zone.get("id").and_then(|v| v.as_str()) else {
-                return Err(DdnsUpdateError::CloudflareJson("zone has no id?".into()));
+                return Err(DdnsUpdateError::Json("zone has no id?".into()));
             };
 
             let Some(permissions) = zone.get("permissions").and_then(|v| v.as_array()) else {
@@ -159,9 +157,7 @@ impl Service {
 
             if can_read && can_edit {
                 let Ok(id) = ZoneId::from_str_radix(id, 16) else {
-                    Err(DdnsUpdateError::CloudflareJson(
-                        "id is not a u128 number".into(),
-                    ))?
+                    Err(DdnsUpdateError::Json("id is not a u128 number".into()))?
                 };
                 zone_ids.push(id);
             }
@@ -186,7 +182,7 @@ impl Service {
 
         let results = response.get("result").and_then(|v| v.as_array());
         let Some(records) = results else {
-            return Err(DdnsUpdateError::CloudflareJson(
+            return Err(DdnsUpdateError::Json(
                 "cloudflare returned 0 records".into(),
             ));
         };
@@ -194,25 +190,19 @@ impl Service {
         let mut returned_records = Vec::new();
         for record in records {
             let Some(id) = record.get("id").and_then(|v| v.as_str()) else {
-                return Err(DdnsUpdateError::CloudflareJson("record has no id?".into()));
+                return Err(DdnsUpdateError::Json("record has no id?".into()));
             };
 
             let Ok(id) = RecordId::from_str_radix(id, 16) else {
-                Err(DdnsUpdateError::CloudflareJson(
-                    "id is not a u128 number".into(),
-                ))?
+                Err(DdnsUpdateError::Json("id is not a u128 number".into()))?
             };
 
             let Some(domain) = record.get("name").and_then(|v| v.as_str()) else {
-                return Err(DdnsUpdateError::CloudflareJson(
-                    "record has no name?".into(),
-                ));
+                return Err(DdnsUpdateError::Json("record has no name?".into()));
             };
 
             let Some(ty) = record.get("type").and_then(|v| v.as_str()) else {
-                return Err(DdnsUpdateError::CloudflareJson(
-                    "record has no type?".into(),
-                ));
+                return Err(DdnsUpdateError::Json("record has no type?".into()));
             };
 
             let kind = match ty {

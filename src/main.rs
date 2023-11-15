@@ -122,6 +122,10 @@ fn main() {
                 Box::new(ipv64::Service::from_config(ip.clone()))
             }
 
+            DdnsConfigService::Porkbun(pb) => {
+                Box::new(porkbun::Service::from_config(pb.clone()))
+            }
+
             DdnsConfigService::Selfhost(sh) => {
                 Box::new(selfhost::Service::from_config(sh.clone()))
             }

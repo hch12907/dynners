@@ -76,6 +76,11 @@
 # IP addresses are allowed in those two options, if the first IP address is
 # unusable (an error flag is set) then the next one will be attempted.
 #
+# NOTE that some services require you to pre-create DNS records on their own   
+# website, notably Porkbun (the edit operation will succeed, but no actual
+# changes are made). Best to create your A and/or AAAA records before starting
+# the daemon.
+#
 # The configuration options will be provided below. 
 # 
 [ddns."cloudflare-example"]
@@ -84,7 +89,7 @@
     token = ""
     ttl = 300
     proxied = true
-    domains = ["www.example.com"]
+    domains = ["www.example.com", "subdomain.example.com"]
 
 [ddns."no-ip-example"]
     service = "no-ip"
@@ -119,6 +124,13 @@
     username = "anything-goes-here"
     password = ""
     domains = "example.com"
+
+[ddns."porkbun-example"]
+    service = "porkbun"
+    ip = ["name1", "name2"]
+    secret_api_key = "sk1_key"
+    api_key = "pk1_key"
+    domains = ["example.com"]
 
 [ddns."selfhost-de-example"]
     service = "selfhost"

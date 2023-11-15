@@ -63,6 +63,7 @@ pub enum DdnsConfigService {
     Duckdns(services::duckdns::Config),
     Dynu(services::dynu::Config),
     Ipv64(services::dynu::Config),
+    Porkbun(services::porkbun::Config),
     Selfhost(services::dynu::Config),
     NoIp(services::noip::Config),
     Dummy(services::dummy::Config),
