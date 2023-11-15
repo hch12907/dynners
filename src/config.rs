@@ -12,7 +12,7 @@ pub struct General {
     pub update_rate: Option<NonZeroU32>,
     #[serde(default = "default_shell")]
     pub shell: Box<str>,
-    #[serde(default)]
+    #[serde(default = "default_user_agent")]
     pub user_agent: Box<str>,
 }
 
@@ -59,6 +59,7 @@ pub struct IpConfig {
 #[serde(rename_all = "kebab-case")]
 pub enum DdnsConfigService {
     CloudflareV4(services::cloudflare::Config),
+    DnsOMatic(services::dnsomatic::Config),
     NoIp(services::noip::Config),
     Dummy(services::dummy::Config),
 }
@@ -77,6 +78,10 @@ pub struct Config {
     pub general: General,
     pub ip: HashMap<Box<str>, IpConfig>,
     pub ddns: HashMap<Box<str>, DdnsConfig>,
+}
+
+fn default_user_agent() -> Box<str> {
+    concat!("github.com/hch12907/dynners ", env!("CARGO_PKG_VERSION")).into()
 }
 
 fn default_shell() -> Box<str> {

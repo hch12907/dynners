@@ -2,6 +2,7 @@ pub mod cloudflare;
 pub mod noip;
 pub mod shared_dyndns;
 pub mod dummy;
+pub mod dnsomatic;
 
 use std::net::IpAddr;
 

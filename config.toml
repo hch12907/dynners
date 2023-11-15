@@ -10,7 +10,8 @@
     shell = "/bin/bash"
 
     # The user agent which will be used by all HTTP requests.
-    user_agent = "dynners 0.1.0/Linux-6.1"
+    # You should append your device model to the user agent string.
+    user_agent = "github.com/hch12907/dynners 0.1.0"
 
 # A list of IP addresses which will be used to update the DDNS records.
 #
@@ -87,6 +88,13 @@
 
 [ddns."no-ip-example"]
     service = "no-ip"
+    ip = ["name1", "name2"]
+    username = "your.email@example.com"
+    password = ""
+    domains = "example.com"
+
+[ddns."dns-o-matic-example"]
+    service = "dns-o-matic"
     ip = ["name1", "name2"]
     username = "your.email@example.com"
     password = ""
