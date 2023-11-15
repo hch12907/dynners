@@ -3,6 +3,10 @@ pub mod noip;
 pub mod shared_dyndns;
 pub mod dummy;
 pub mod dnsomatic;
+pub mod dynu;
+pub mod ipv64;
+pub mod selfhost;
+pub mod duckdns;
 
 use std::net::IpAddr;
 
@@ -36,6 +40,9 @@ pub enum DdnsUpdateError {
     // used when CF says it succeeded, but the returned JSON is nonsense
     #[error("Cloudflare returned erroneous JSON: {0}")]
     CloudflareJson(Box<str>),
+
+    #[error("DuckDNS rejected the request - check again your tokens and domains")]
+    DuckDns,
 
     #[error("{0} returned error: {1}")]
     DynDns(&'static str, Box<str>),

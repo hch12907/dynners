@@ -96,7 +96,34 @@
 [ddns."dns-o-matic-example"]
     service = "dns-o-matic"
     ip = ["name1", "name2"]
-    username = "your.email@example.com"
+    username = "your-username"
+    password = ""
+    domains = "example.com"
+
+[ddns."duck-dns-example"]
+    service = "duckdns"
+    ip = ["name1", "name2"]
+    token = "your-token"
+    domains = "example.org"
+
+[ddns."dynu-example"]
+    service = "dynu"
+    ip = ["name1", "name2"]
+    username = "your-username"
+    password = ""
+    domains = "example.com"
+
+[ddns."ipv64-example"]
+    service = "ipv64"
+    ip = ["name1", "name2"]
+    username = "anything-goes-here"
+    password = ""
+    domains = "example.com"
+
+[ddns."selfhost-de-example"]
+    service = "selfhost"
+    ip = ["name1", "name2"]
+    username = "dyn-account"
     password = ""
     domains = "example.com"
 

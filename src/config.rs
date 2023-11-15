@@ -60,6 +60,10 @@ pub struct IpConfig {
 pub enum DdnsConfigService {
     CloudflareV4(services::cloudflare::Config),
     DnsOMatic(services::dnsomatic::Config),
+    Duckdns(services::duckdns::Config),
+    Dynu(services::dynu::Config),
+    Ipv64(services::dynu::Config),
+    Selfhost(services::dynu::Config),
     NoIp(services::noip::Config),
     Dummy(services::dummy::Config),
 }
