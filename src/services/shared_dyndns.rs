@@ -82,8 +82,6 @@ impl DdnsService for Service {
                     .into_string()
                     .map_err(|e| DdnsUpdateError::DynDns(self.name, e.to_string().into()))?;
 
-                println!("{resp}");
-
                 if resp.starts_with("good") {
                     let mut split = resp.strip_prefix("good").unwrap().split(',');
 

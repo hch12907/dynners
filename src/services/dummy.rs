@@ -30,7 +30,7 @@ impl DdnsService for Service {
         let ipv6_str = ipv6.map(|ip| ip.to_string()).unwrap_or_default();
 
         // Simulate updating the domains
-        print!("Updating the following domains: ");
+        print!("Dummy: simulate updating the following domains: ");
         println!("{}", self.config.domains.join(", "));
         println!("... using the IP addresses: {} {}", ipv4_str, ipv6_str);
 
