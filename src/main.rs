@@ -159,7 +159,7 @@ fn main() {
                         println!("[INFO] Updated DDNS service {} with IP {}", name, ip);
                     }
 
-                    if updated.as_slice().is_empty() {
+                    if updated.get(0).is_none() {
                         println!(
                             "[INFO] Tried to update DDNS service {}, but no changes were made",
                             name
