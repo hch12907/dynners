@@ -1,8 +1,8 @@
 use std::net::IpAddr;
 
 use serde_derive::{Deserialize, Serialize};
-use ureq::Response;
 
+use crate::http::{Response, Request, Error};
 use crate::util::FixedVec;
 use crate::GENERAL_CONFIG;
 
@@ -81,20 +81,20 @@ impl Service {
 
     fn parse_and_check_response(
         &self,
-        response: Result<Response, ureq::Error>,
+        response: Result<Response, Error>,
     ) -> Result<serde_json::Value, DdnsUpdateError> {
         let response = match response {
             Ok(r) => r
                 .into_json::<serde_json::Value>()
                 .map_err(|e| DdnsUpdateError::Json(e.to_string().into()))?,
-            Err(ureq::Error::Status(_, resp)) => {
+            Err(Error::Status(_, resp)) => {
                 let (code, message) = self.parse_error(resp).map_err(|ref e| {
                     let error = String::from("(!!) unexpected error message structure - ");
                     DdnsUpdateError::Json((error + e).into_boxed_str())
                 })?;
                 Err(DdnsUpdateError::Cloudflare(code, message.into()))?
             }
-            Err(ureq::Error::Transport(tp)) => {
+            Err(Error::Transport(tp)) => {
                 Err(DdnsUpdateError::TransportError(tp.to_string().into()))?
             }
         };
@@ -114,7 +114,7 @@ impl Service {
     }
 
     fn get_zones(&self) -> Result<Vec<ZoneId>, DdnsUpdateError> {
-        let response = ureq::get("https://api.cloudflare.com/client/v4/zones/")
+        let response = Request::get("https://api.cloudflare.com/client/v4/zones/")
             .set("User-Agent", &GENERAL_CONFIG.get().unwrap().user_agent)
             .set("Content-Type", "application/json")
             .set("Authorization", &self.config.token)
@@ -172,8 +172,7 @@ impl Service {
             zone_id
         );
 
-        let response = ureq::get(&url)
-            .set("User-Agent", &GENERAL_CONFIG.get().unwrap().user_agent)
+        let response = Request::get(&url)
             .set("Content-Type", "application/json")
             .set("Authorization", &self.config.token)
             .call();
@@ -228,10 +227,10 @@ impl Service {
             record.zone_id, record.id
         );
 
-        let response = ureq::put(&url)
+        let response = Request::put(&url)
             .set("User-Agent", &GENERAL_CONFIG.get().unwrap().user_agent)
             .set("Authorization", &self.config.token)
-            .send_json(ureq::json!({
+            .send_json(serde_json::json!({
                 "content": ip.to_string(),
                 "name": record.domain.as_ref(),
                 "proxied": self.config.proxied,

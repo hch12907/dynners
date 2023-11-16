@@ -1,4 +1,5 @@
 mod config;
+mod http;
 mod ip;
 mod services;
 mod util;

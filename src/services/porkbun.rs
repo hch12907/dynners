@@ -2,8 +2,8 @@ use std::convert::Infallible;
 use std::net::IpAddr;
 
 use serde_derive::{Deserialize, Serialize};
-use ureq::Error;
 
+use crate::http::{Error, Request};
 use crate::util::{one_or_more_string, FixedVec};
 use crate::GENERAL_CONFIG;
 
@@ -29,7 +29,7 @@ impl Service {
         Self { config }
     }
 
-    fn parse_error(error: ureq::Error) -> Result<Infallible, DdnsUpdateError> {
+    fn parse_error(error: Error) -> Result<Infallible, DdnsUpdateError> {
         match error {
             Error::Status(code, resp) if code < 500 => {
                 let json = resp
@@ -75,9 +75,9 @@ impl DdnsService for Service {
                     domain, subdomain
                 );
 
-                let request = ureq::post(&url)
+                let request = Request::post(&url)
                     .set("User-Agent", &GENERAL_CONFIG.get().unwrap().user_agent)
-                    .send_json(ureq::json!({
+                    .send_json(serde_json::json!({
                         "secretapikey": &self.config.secret_api_key,
                         "apikey": &self.config.api_key,
                         "content": ipv4.to_string(),
@@ -99,9 +99,9 @@ impl DdnsService for Service {
                     domain, subdomain
                 );
 
-                let request = ureq::post(&url)
+                let request = Request::post(&url)
                     .set("User-Agent", &GENERAL_CONFIG.get().unwrap().user_agent)
-                    .send_json(ureq::json!({
+                    .send_json(serde_json::json!({
                         "secretapikey": &self.config.secret_api_key,
                         "apikey": &self.config.api_key,
                         "content": ipv6.to_string(),

@@ -1,8 +1,8 @@
 use std::net::IpAddr;
 
 use serde_derive::{Deserialize, Serialize};
-use ureq::Error;
 
+use crate::http::{Request, Error};
 use crate::util::{one_or_more_string, FixedVec};
 use crate::GENERAL_CONFIG;
 
@@ -58,9 +58,8 @@ impl DdnsService for Service {
         let ipv4 = ips.iter().find(|ip| ip.is_ipv4());
         let ipv6 = ips.iter().find(|ip| ip.is_ipv6());
 
-        let request = ureq::get(self.server)
+        let request = Request::get(self.server)
             .set("Authorization", &self.auth)
-            .set("User-Agent", &GENERAL_CONFIG.get().unwrap().user_agent)
             .query("hostname", &self.config.domains.join(","));
 
         let request = if ipv4.is_some() && ipv6.is_some() {
