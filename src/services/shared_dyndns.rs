@@ -82,8 +82,8 @@ impl DdnsService for Service {
                     .into_string()
                     .map_err(|e| DdnsUpdateError::DynDns(self.name, e.to_string().into()))?;
 
-                if resp.starts_with("good") {
-                    let mut split = resp.strip_prefix("good").unwrap().split(',');
+                if let Some(resp) = resp.strip_prefix("good") {
+                    let mut split = resp.split(',');
 
                     let mut ip1 = split.next().and_then(|r| r.trim().parse::<IpAddr>().ok());
                     let mut ip2 = split.next().and_then(|r| r.trim().parse::<IpAddr>().ok());

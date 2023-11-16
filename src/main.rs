@@ -149,8 +149,8 @@ fn main() {
             let ips = service_ips[name]
                 .iter()
                 .map(|name| &ips[name])
-                .filter(|ip| ip.address().is_some())
-                .map(|ip| *ip.address().unwrap())
+                .filter_map(|ip| ip.address())
+                .cloned()
                 .collect::<Vec<_>>(); // TODO: use collect_into in the future
 
             match service.update_record(ips.as_slice()) {

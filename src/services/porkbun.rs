@@ -63,19 +63,11 @@ impl DdnsService for Service {
             let subdomain = subdomain_parts
                 .into_iter()
                 .rfold(String::new(), |acc, x| acc + "." + x);
+            let subdomain = subdomain.trim_start_matches('.');
 
-            let subdomain = if subdomain.starts_with('.') {
-                subdomain.strip_prefix('.').unwrap()
-            } else {
-                subdomain.as_str()
-            };
-
-            let domain = domain.strip_prefix(&subdomain).unwrap();
-            let domain = if domain.starts_with('.') {
-                domain.strip_prefix('.').unwrap()
-            } else {
-                domain
-            };
+            // UNWRAP-SAFETY: subdomain is guaranteed to be the prefix of domain
+            let domain = domain.strip_prefix(&subdomain).unwrap()
+                .trim_start_matches('.');
 
             if let Some(ipv4) = ipv4 {
                 let url = format!(
@@ -128,6 +120,8 @@ impl DdnsService for Service {
 
         let mut result = FixedVec::new();
         if ipv4_succeeded {
+            // UNWRAP-SAFETY: ipv4 (and ipv6 below) can only succeed when
+            // it is not None
             result.push(*ipv4.unwrap());
         }
         if ipv6_succeeded {

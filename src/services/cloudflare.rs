@@ -269,11 +269,11 @@ impl DdnsService for Service {
         }
 
         let mut result = FixedVec::new();
-        if ipv4.is_some() {
-            result.push(*ipv4.unwrap());
+        if let Some(ipv4) = ipv4 {
+            result.push(*ipv4);
         }
-        if ipv6.is_some() {
-            result.push(*ipv6.unwrap());
+        if let Some(ipv6) = ipv6 {
+            result.push(*ipv6);
         }
 
         Ok(result)
