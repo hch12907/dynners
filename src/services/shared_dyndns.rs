@@ -85,12 +85,8 @@ impl DdnsService for Service {
                 if resp.starts_with("good") {
                     let mut split = resp.strip_prefix("good").unwrap().split(',');
 
-                    let mut ip1 = split
-                        .next()
-                        .and_then(|r| r.trim().parse::<IpAddr>().ok());
-                    let mut ip2 = split
-                        .next()
-                        .and_then(|r| r.trim().parse::<IpAddr>().ok());
+                    let mut ip1 = split.next().and_then(|r| r.trim().parse::<IpAddr>().ok());
+                    let mut ip2 = split.next().and_then(|r| r.trim().parse::<IpAddr>().ok());
 
                     // Some DDNS services don't seem to return IPs even though
                     // "good" is returned. In that case, return all known IPs.
@@ -143,7 +139,10 @@ impl DdnsService for Service {
                     } else if resp.starts_with("numhost") {
                         String::from("Too many hosts are specified")
                     } else if resp.starts_with("badagent") {
-                        String::from("Bad user agent was provided. Put in a user_agent in the config file.")
+                        String::from(concat!(
+                            "Bad user agent was provided. ",
+                            "Configure your user_agent properly in the config file."
+                        ))
                     } else {
                         resp
                     };

@@ -6,7 +6,7 @@ use std::mem::MaybeUninit;
 /// This helper is intended to aid deserializing fields that can contain a
 /// string or a string array. It will always deserialize a single string into
 /// a `Vector` containing that string. String arrays are deserialized as-is.
-/// 
+///
 /// For example,
 /// ```
 /// TOML ["a", "b"] ---> vec![Box("a"), Box("b")]` and
@@ -51,7 +51,10 @@ pub struct FixedVec<T, const N: usize> {
 
 impl<T: Copy, const N: usize> FixedVec<T, N> {
     pub fn new() -> Self {
-        Self { length: 0, array: [MaybeUninit::uninit(); N] }
+        Self {
+            length: 0,
+            array: [MaybeUninit::uninit(); N],
+        }
     }
 
     pub fn get(&self, index: u32) -> Option<&T> {
@@ -69,7 +72,7 @@ impl<T: Copy, const N: usize> FixedVec<T, N> {
     }
 
     pub fn as_slice(&self) -> &[T] {
-        // CAST-SAFETY: MaybeUninit<T> is sized & aligned the same as T          
+        // CAST-SAFETY: MaybeUninit<T> is sized & aligned the same as T
         let ptr = self.array.as_ptr() as *const T;
         let len = self.length;
 
@@ -89,7 +92,7 @@ mod tests {
         assert!(vec.push(10).is_none());
         assert!(vec.push(20).is_none());
         assert!(!vec.push(30).is_none());
-        
+
         assert!(vec.get(0).is_some());
         assert!(vec.get(1).is_some());
         assert!(!vec.get(2).is_some());
@@ -107,4 +110,3 @@ mod tests {
         assert_eq!(vec.as_slice().len(), 2);
     }
 }
- 

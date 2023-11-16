@@ -14,10 +14,10 @@ impl Service {
     pub fn from_config(config: Config) -> Self {
         Self {
             inner: shared_dyndns::Service::from_config(
-                "DNS-O-Matic", 
+                "DNS-O-Matic",
                 "https://updates.dnsomatic.com/nic/update",
-                config
-            )
+                config,
+            ),
         }
     }
 }

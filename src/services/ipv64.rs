@@ -14,10 +14,10 @@ impl Service {
     pub fn from_config(config: Config) -> Self {
         Self {
             inner: shared_dyndns::Service::from_config(
-                "IPv64", 
+                "IPv64",
                 "https://ipv64.net/nic/update",
-                config
-            )
+                config,
+            ),
         }
     }
 }

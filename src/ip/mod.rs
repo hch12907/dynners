@@ -78,8 +78,9 @@ pub enum DynamicIpError {
 impl IpService {
     fn from_config(config: &IpConfig) -> Result<Self, DynamicIpError> {
         match (&config.version, &config.method) {
-            (IpVersion::V4, IpConfigMethod::Exec { command }) =>
-                Ok(Self::ExecV4 { command: command.clone() }),
+            (IpVersion::V4, IpConfigMethod::Exec { command }) => Ok(Self::ExecV4 {
+                command: command.clone(),
+            }),
 
             (IpVersion::V4, IpConfigMethod::Interface { iface, matches }) => {
                 let matches = if matches.is_empty() {
@@ -112,8 +113,9 @@ impl IpService {
                 })
             }
 
-            (IpVersion::V6, IpConfigMethod::Exec { command }) =>
-                Ok(Self::ExecV6 { command: command.clone() }),
+            (IpVersion::V6, IpConfigMethod::Exec { command }) => Ok(Self::ExecV6 {
+                command: command.clone(),
+            }),
 
             (IpVersion::V6, IpConfigMethod::Interface { iface, matches }) => {
                 let matches = if matches.is_empty() {
@@ -188,7 +190,7 @@ impl DynamicIp {
             IpService::HttpV4 { ref url, ref regex } => http::get_address_v4(url, regex)
                 .map(IpAddr::from)
                 .map_err(|e| DynamicIpError::HttpFailure(e.into())),
-            
+
             IpService::ExecV6 { ref command } => exec::execute_command_v6(&command)
                 .map(IpAddr::from)
                 .map_err(|e| DynamicIpError::ExecutionFailure(e.into())),

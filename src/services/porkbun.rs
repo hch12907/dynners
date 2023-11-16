@@ -92,7 +92,8 @@ impl DdnsService for Service {
                     }))
                     .map_err(|e| Self::parse_error(e).unwrap_err())?;
 
-                let json = request.into_json::<serde_json::Value>()
+                let json = request
+                    .into_json::<serde_json::Value>()
                     .map_err(|e| DdnsUpdateError::Json(e.to_string().into()))?;
 
                 let success = json.get("status").and_then(|v| v.as_str()) == Some("SUCCESS");
@@ -111,11 +112,12 @@ impl DdnsService for Service {
                     .send_json(ureq::json!({
                         "secretapikey": &self.config.secret_api_key,
                         "apikey": &self.config.api_key,
-                        "content": ipv6.to_string(), 
+                        "content": ipv6.to_string(),
                     }))
                     .map_err(|e| Self::parse_error(e).unwrap_err())?;
 
-                let json = request.into_json::<serde_json::Value>()
+                let json = request
+                    .into_json::<serde_json::Value>()
                     .map_err(|e| DdnsUpdateError::Json(e.to_string().into()))?;
 
                 let success = json.get("status").and_then(|v| v.as_str()) == Some("SUCCESS");

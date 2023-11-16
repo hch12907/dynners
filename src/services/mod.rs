@@ -1,13 +1,13 @@
 pub mod cloudflare;
-pub mod noip;
-pub mod shared_dyndns;
-pub mod dummy;
 pub mod dnsomatic;
+pub mod duckdns;
+pub mod dummy;
 pub mod dynu;
 pub mod ipv64;
-pub mod selfhost;
-pub mod duckdns;
+pub mod noip;
 pub mod porkbun;
+pub mod selfhost;
+pub mod shared_dyndns;
 
 use std::net::IpAddr;
 

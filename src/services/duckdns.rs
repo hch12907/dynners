@@ -23,9 +23,7 @@ pub struct Service {
 
 impl Service {
     pub fn from_config(config: Config) -> Self {
-        Self {
-            config,
-        }
+        Self { config }
     }
 }
 
@@ -45,7 +43,7 @@ impl DdnsService for Service {
             request = request.query("ip", &ipv4.to_string());
             result.push(*ipv4);
         }
-        
+
         if let Some(ipv6) = ipv6 {
             request = request.query("ipv6", &ipv6.to_string());
             result.push(*ipv6);
@@ -53,9 +51,7 @@ impl DdnsService for Service {
 
         match request.call() {
             Ok(resp) | Err(Error::Status(_, resp)) => {
-                let resp = resp
-                    .into_string()
-                    .map_err(|_| DdnsUpdateError::DuckDns)?;
+                let resp = resp.into_string().map_err(|_| DdnsUpdateError::DuckDns)?;
 
                 if resp.starts_with("OK") || resp.starts_with("good") {
                     Ok(result)

@@ -102,38 +102,23 @@ fn main() {
                 Box::new(cloudflare::Service::from_config(cf.clone()))
             }
 
-            DdnsConfigService::NoIp(np) => {
-                Box::new(noip::Service::from_config(np.clone()))
-            }
+            DdnsConfigService::NoIp(np) => Box::new(noip::Service::from_config(np.clone())),
 
             DdnsConfigService::DnsOMatic(dom) => {
                 Box::new(dnsomatic::Service::from_config(dom.clone()))
             }
 
-            DdnsConfigService::Duckdns(dk) => {
-                Box::new(duckdns::Service::from_config(dk.clone()))
-            }
+            DdnsConfigService::Duckdns(dk) => Box::new(duckdns::Service::from_config(dk.clone())),
 
-            DdnsConfigService::Dynu(du) => {
-                Box::new(dynu::Service::from_config(du.clone()))
-            }
+            DdnsConfigService::Dynu(du) => Box::new(dynu::Service::from_config(du.clone())),
 
-            DdnsConfigService::Ipv64(ip) => {
-                Box::new(ipv64::Service::from_config(ip.clone()))
-            }
+            DdnsConfigService::Ipv64(ip) => Box::new(ipv64::Service::from_config(ip.clone())),
 
-            DdnsConfigService::Porkbun(pb) => {
-                Box::new(porkbun::Service::from_config(pb.clone()))
-            }
+            DdnsConfigService::Porkbun(pb) => Box::new(porkbun::Service::from_config(pb.clone())),
 
-            DdnsConfigService::Selfhost(sh) => {
-                Box::new(selfhost::Service::from_config(sh.clone()))
-            }
+            DdnsConfigService::Selfhost(sh) => Box::new(selfhost::Service::from_config(sh.clone())),
 
-            DdnsConfigService::Dummy(dm) => {
-                Box::new(dummy::Service::from_config(dm.clone()))
-            }
-
+            DdnsConfigService::Dummy(dm) => Box::new(dummy::Service::from_config(dm.clone())),
         };
 
         services.push((name, service))
@@ -158,7 +143,7 @@ fn main() {
                 .any(|ip| ip.is_dirty());
 
             if !is_dirty {
-                continue
+                continue;
             }
 
             let ips = service_ips[name]
@@ -175,7 +160,10 @@ fn main() {
                     }
 
                     if updated.as_slice().is_empty() {
-                        println!("[INFO] Tried to update DDNS service {}, but no changes were made", name);
+                        println!(
+                            "[INFO] Tried to update DDNS service {}, but no changes were made",
+                            name
+                        );
                     }
                 }
 
