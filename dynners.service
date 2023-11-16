@@ -1,0 +1,11 @@
+[Unit]
+Description=Dynners DDNS client
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/dynners
+CPUSchedulingPolicy=idle
+
+[Install]
+WantedBy=multi-user.target

@@ -1,8 +1,12 @@
+# The sample configuration file for dynners.
+# TOML is used as the syntax - see its documentation for more information.
+#
 # General settings that apply to the daemon itself.
 [general]
     # How long it should take, in seconds, before the daemon re-checks &
     # updates the DDNS records. Note that if the addresses are unchanged,
     # the DDNS service will not be consulted.
+    # This must be specified.
     update_rate = 300
 
     # The shell which will be used by the "exec" IP configuration method,
@@ -22,12 +26,14 @@
 #  - "interface"
 #  - "http"
 #
-# Those IP addresses are named (below, "name1" to "name3" are used). The
-# name can be whatever you want, even `[ip."世界"]` is perfectly reasonable.
+# Those IP addresses are named (below, "name1" to "name4" are used). The
+# names can be whatever you want as long as they are UTF-8, even `[ip."世界"]`
+# is perfectly reasonable. However, non-alphanumeric identifiers must be
+# surrounded by quotes.
 #
 # Each of the IP addresses have an internal error flag that is set when the
-# method fails (e.g. HTTP status code 500, or the iface IP fails to match
-# the netmask).
+# method fails (e.g. HTTP client returned status code 500, or the IP obtained
+# from an interface failed to match the netmask).
 [ip.name1]
     version = 6
     method = "interface"
