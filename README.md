@@ -26,12 +26,19 @@ Currently, the following DDNS providers are supported:
 * selfHOST.de
 
 ## Building
+By default, dynners will be built with `ureq` as the HTTP client, and without a
+regex engine. 
+
 ```bash
 # Without regex
 $ cargo build --release
 
 # With regex, the binary will be more heavyweight with this enabled (~1.2MB increase)
 $ cargo build --release --features regex
+
+# With curl (instead of ureq) as the HTTP client, the binary is smaller (~1.0MB decrease)
+# However, ureq is still HIGHLY recommended. Only use curl if you have limited spaces.
+$ cargo build --release --features curl --no-default-features
 
 # For installation, a simple mv or cp is enough. 
 # You might want to install a systemd service though.

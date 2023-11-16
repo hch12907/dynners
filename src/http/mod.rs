@@ -1,4 +1,9 @@
 #[cfg(feature = "curl")]
+#[cfg(feature = "ureq")]
+#[error("The features `curl` and `ureq` must not be enabled together!")]
+const FORCED_ERROR: u8 = 1 / 0;
+
+#[cfg(feature = "curl")]
 mod curl_backend;
 
 #[cfg(feature = "ureq")]
