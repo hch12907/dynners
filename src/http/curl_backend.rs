@@ -1,10 +1,11 @@
-use std::string::FromUtf8Error;
+use std::io::Cursor;
 
 use curl::easy::{Easy, List};
-use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use crate::GENERAL_CONFIG;
+
+use super::{Error, Response};
 
 pub struct Request {
     curl: Easy,
@@ -13,21 +14,13 @@ pub struct Request {
     queries: String,
 }
 
-pub struct Response {
-    bytes: Box<[u8]>, 
-}
-
-pub enum Error {
-    Status(u16, Response),
-    Transport(Box<str>),
-}
-
 impl Request {
     pub fn get(url: &str) -> Self {
         let mut curl = Easy::new();
         // UNWRAP-SAFETY: HTTP is supported. And we are already screwed if it isn't...
         curl.get(true).unwrap();
-        curl.useragent(&GENERAL_CONFIG.get().unwrap().user_agent).expect("out of memory");
+        curl.useragent(&GENERAL_CONFIG.get().unwrap().user_agent)
+            .expect("out of memory");
 
         Self {
             curl,
@@ -41,7 +34,8 @@ impl Request {
         let mut curl = Easy::new();
         // UNWRAP-SAFETY: HTTP is supported.
         curl.post(true).unwrap();
-        curl.useragent(&GENERAL_CONFIG.get().unwrap().user_agent).expect("out of memory");
+        curl.useragent(&GENERAL_CONFIG.get().unwrap().user_agent)
+            .expect("out of memory");
 
         Self {
             curl,
@@ -55,7 +49,8 @@ impl Request {
         let mut curl = Easy::new();
         // UNWRAP-SAFETY: HTTP is supported. And we are already screwed if it isn't...
         curl.put(true).unwrap();
-        curl.useragent(&GENERAL_CONFIG.get().unwrap().user_agent).expect("out of memory");
+        curl.useragent(&GENERAL_CONFIG.get().unwrap().user_agent)
+            .expect("out of memory");
 
         Self {
             curl,
@@ -86,18 +81,20 @@ impl Request {
             .expect("unable to serialize data into JSON string")
             .into_iter();
 
-        self.curl.read_function(move |dest| {
-            let to_write = dest.len();
-            let actual_written = request.len().min(to_write);
+        self.curl
+            .read_function(move |dest| {
+                let to_write = dest.len();
+                let actual_written = request.len().min(to_write);
 
-            request
-                .by_ref()
-                .take(actual_written)
-                .enumerate()
-                .for_each(|(i, byte)| dest[i] = byte);
+                request
+                    .by_ref()
+                    .take(actual_written)
+                    .enumerate()
+                    .for_each(|(i, byte)| dest[i] = byte);
 
-            Ok(actual_written)
-        }).unwrap(); // UNWRAP-SAFETY: This is always CURLE_OK. 
+                Ok(actual_written)
+            })
+            .unwrap(); // UNWRAP-SAFETY: This is always CURLE_OK.
 
         self.call()
     }
@@ -109,39 +106,33 @@ impl Request {
         // UNWRAP-SAFETY: HTTP is supported.
         self.curl.http_headers(self.header_list).unwrap();
 
-        let mut response = Vec::with_capacity(128);
+        let mut response = Vec::with_capacity(8192);
         let mut transfer = self.curl.transfer();
 
-        transfer.write_function(|src| {
-            response.extend(src.iter().copied());
-            Ok(src.len())
-        }).unwrap(); // UNWRAP-SAFETY: This is always CURLE_OK. 
+        transfer
+            .write_function(|src| {
+                response.extend(src.iter().copied());
+                Ok(src.len())
+            })
+            .unwrap(); // UNWRAP-SAFETY: This is always CURLE_OK.
 
         if let Err(err) = transfer.perform() {
-            return Err(Error::Transport(err.description().into()))
+            return Err(Error::Transport(err.description().into()));
         };
 
         drop(transfer);
 
-        let response = Response { bytes: response.into() };
+        let response = Response {
+            reader: Box::new(Cursor::new(response)),
+        };
 
         // UNWRAP-SAFETY: The only error condition is when the curl version
         //                is too old. Let's just not support that.
         let response_code = self.curl.response_code().unwrap();
         if response_code >= 400 {
-            return Err(Error::Status(response_code as u16, response))
+            return Err(Error::Status(response_code as u16, response));
         };
 
         Ok(response)
-    }
-}
-
-impl Response {
-    pub fn into_json<T: DeserializeOwned>(self) -> Result<T, serde_json::Error> {
-        serde_json::from_slice::<T>(&self.bytes)
-    }
-
-    pub fn into_string(self) -> Result<String, FromUtf8Error> {
-        String::from_utf8(Vec::from(self.bytes))
     }
 }

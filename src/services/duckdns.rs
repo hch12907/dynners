@@ -4,7 +4,6 @@ use serde_derive::{Deserialize, Serialize};
 
 use crate::http::{Error, Request};
 use crate::util::{one_or_more_string, FixedVec};
-use crate::GENERAL_CONFIG;
 
 use super::{DdnsService, DdnsUpdateError};
 
@@ -33,7 +32,6 @@ impl DdnsService for Service {
         let ipv6 = ips.iter().find(|ip| ip.is_ipv6());
 
         let mut request = Request::get("https://www.duckdns.org/update")
-            .set("User-Agent", &GENERAL_CONFIG.get().unwrap().user_agent)
             .query("domains", &self.config.domains.join(","))
             .query("token", &self.config.token);
 

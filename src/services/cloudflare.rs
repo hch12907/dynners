@@ -2,9 +2,8 @@ use std::net::IpAddr;
 
 use serde_derive::{Deserialize, Serialize};
 
-use crate::http::{Response, Request, Error};
+use crate::http::{Error, Request, Response};
 use crate::util::FixedVec;
-use crate::GENERAL_CONFIG;
 
 use super::{one_or_more_string, DdnsService, DdnsUpdateError};
 
@@ -115,7 +114,6 @@ impl Service {
 
     fn get_zones(&self) -> Result<Vec<ZoneId>, DdnsUpdateError> {
         let response = Request::get("https://api.cloudflare.com/client/v4/zones/")
-            .set("User-Agent", &GENERAL_CONFIG.get().unwrap().user_agent)
             .set("Content-Type", "application/json")
             .set("Authorization", &self.config.token)
             .call();
@@ -228,7 +226,6 @@ impl Service {
         );
 
         let response = Request::put(&url)
-            .set("User-Agent", &GENERAL_CONFIG.get().unwrap().user_agent)
             .set("Authorization", &self.config.token)
             .send_json(serde_json::json!({
                 "content": ip.to_string(),

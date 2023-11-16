@@ -4,16 +4,12 @@ use std::net::{Ipv4Addr, Ipv6Addr};
 use regex::Regex;
 
 use crate::http::{Error, Request};
-use crate::GENERAL_CONFIG;
 
 pub(super) fn get_address_v4(
     url: &str,
     #[cfg(feature = "regex")] regex: &Regex,
 ) -> Result<Ipv4Addr, String> {
-    let response = match Request::get(url)
-        .set("User-Agent", &GENERAL_CONFIG.get().unwrap().user_agent)
-        .call()
-    {
+    let response = match Request::get(url).call() {
         Ok(r) => r,
         Err(Error::Status(code, response)) => {
             Err(code.to_string() + &response.into_string().unwrap_or_default())?
@@ -42,10 +38,7 @@ pub(super) fn get_address_v6(
     url: &str,
     #[cfg(feature = "regex")] regex: &Regex,
 ) -> Result<Ipv6Addr, String> {
-    let response = match Request::get(url)
-        .set("User-Agent", &GENERAL_CONFIG.get().unwrap().user_agent)
-        .call()
-    {
+    let response = match Request::get(url).call() {
         Ok(r) => r,
         Err(Error::Status(code, response)) => {
             Err(code.to_string() + &response.into_string().unwrap_or_default())?

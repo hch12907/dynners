@@ -5,7 +5,6 @@ use serde_derive::{Deserialize, Serialize};
 
 use crate::http::{Error, Request};
 use crate::util::{one_or_more_string, FixedVec};
-use crate::GENERAL_CONFIG;
 
 use super::{DdnsService, DdnsUpdateError};
 
@@ -66,7 +65,9 @@ impl DdnsService for Service {
             let subdomain = subdomain.trim_start_matches('.');
 
             // UNWRAP-SAFETY: subdomain is guaranteed to be the prefix of domain
-            let domain = domain.strip_prefix(&subdomain).unwrap()
+            let domain = domain
+                .strip_prefix(&subdomain)
+                .unwrap()
                 .trim_start_matches('.');
 
             if let Some(ipv4) = ipv4 {
@@ -76,7 +77,6 @@ impl DdnsService for Service {
                 );
 
                 let request = Request::post(&url)
-                    .set("User-Agent", &GENERAL_CONFIG.get().unwrap().user_agent)
                     .send_json(serde_json::json!({
                         "secretapikey": &self.config.secret_api_key,
                         "apikey": &self.config.api_key,
@@ -100,7 +100,6 @@ impl DdnsService for Service {
                 );
 
                 let request = Request::post(&url)
-                    .set("User-Agent", &GENERAL_CONFIG.get().unwrap().user_agent)
                     .send_json(serde_json::json!({
                         "secretapikey": &self.config.secret_api_key,
                         "apikey": &self.config.api_key,

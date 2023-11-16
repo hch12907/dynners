@@ -2,7 +2,7 @@ use std::net::IpAddr;
 
 use serde_derive::{Deserialize, Serialize};
 
-use crate::http::{Request, Error};
+use crate::http::{Error, Request};
 use crate::util::{one_or_more_string, FixedVec};
 use crate::GENERAL_CONFIG;
 
