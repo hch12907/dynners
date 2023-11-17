@@ -155,7 +155,7 @@ impl DynamicIp {
     pub fn from_config(config: &IpConfig) -> Result<Self, DynamicIpError> {
         Ok(Self {
             address: None,
-            dirty: true,
+            dirty: false,
             service: IpService::from_config(config)?,
         })
     }
@@ -215,6 +215,8 @@ impl DynamicIp {
 
         if let Some(old_ip) = &self.address {
             self.dirty = *old_ip != new_ip;
+        } else {
+            self.dirty = true;
         }
 
         self.address = Some(new_ip);
