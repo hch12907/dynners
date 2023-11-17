@@ -23,7 +23,29 @@ const CONFIG_PATHS: [&'static str; 2] = [
 
 static GENERAL_CONFIG: OnceLock<General> = OnceLock::new();
 
+fn check_curl_version() {
+    #[cfg(feature = "curl")] {
+        let num = curl::Version::get().version_num();
+        let major = (num >> 16) & 0xFF;
+        let minor = (num >> 8) & 0xFF;
+        
+        // As of writing, this is the oldest supported curl in Debian 10.
+        // Not going to support anything older than that.
+        if !(major > 7 || (major == 7 && minor >= 64)) {
+            println!("System libcurl is too old! Minimum required: 7.64.0");
+            std::process::exit(1);
+        }
+
+        if curl::Version::get().ssl_version().is_none() {
+            println!("libcurl doesn't seem to have SSL support. Exiting.");
+            std::process::exit(1);
+        }
+    }
+}
+
 fn main() {
+    check_curl_version();
+
     let mut config = String::new();
     for path in CONFIG_PATHS {
         let mut file = match File::open(path) {
