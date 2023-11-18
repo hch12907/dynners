@@ -5,10 +5,11 @@ use serde_derive::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::services;
-use crate::util::one_or_more_string;
+use crate::util::{one_or_more_string, parse_number_into_optional_nonzero};
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq)]
 pub struct General {
+    #[serde(deserialize_with = "parse_number_into_optional_nonzero")]
     pub update_rate: Option<NonZeroU32>,
     #[serde(default = "default_shell")]
     pub shell: Box<str>,

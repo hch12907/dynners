@@ -2,6 +2,7 @@ use serde::de::Visitor;
 use serde::Deserialize;
 use serde::Deserializer;
 use std::mem::MaybeUninit;
+use std::num::NonZeroU32;
 
 /// This helper is intended to aid deserializing fields that can contain a
 /// string or a string array. It will always deserialize a single string into
@@ -41,6 +42,64 @@ where
     }
 
     deserializer.deserialize_any(OneOrMoreString)
+}
+
+/// This helper is intended to aid deserializing fields that contain a non-
+/// optional number. Zero is deserialized into None, otherwise Some(number).
+///
+/// For example,
+/// ```
+/// TOML 0 ---> None
+/// TOML 1234 ---> Some(1234)
+/// ```
+pub(super) fn parse_number_into_optional_nonzero<'de, D>(deserializer: D) -> Result<Option<NonZeroU32>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct OptionalNonzero;
+
+    impl<'de> Visitor<'de> for OptionalNonzero {
+        type Value = Option<NonZeroU32>;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str("an unsigned integer")
+        }
+
+        fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            if value > u32::MAX as u64 {
+                Err(E::invalid_type(
+                    serde::de::Unexpected::Unsigned(value as u64),
+                    &"an unsigned integer between 0 to 4294967295"
+                ))
+            } else {
+                Ok(NonZeroU32::new(value as u32))
+            }
+        }
+
+        fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            if value > u32::MAX as i64 {
+                Err(E::invalid_type(
+                    serde::de::Unexpected::Signed(value),
+                    &"an unsigned integer between 0 to 4294967295"
+                ))
+            } else if value < u32::MIN as i64 {
+                Err(E::invalid_type(
+                    serde::de::Unexpected::Signed(value),
+                    &"an unsigned integer"
+                ))
+            } else {
+                Ok(NonZeroU32::new(value as u32))
+            }
+        }
+    }
+
+    deserializer.deserialize_any(OptionalNonzero)
 }
 
 /// A super simple fixed-allocation vector.
