@@ -52,7 +52,9 @@ where
 /// TOML 0 ---> None
 /// TOML 1234 ---> Some(1234)
 /// ```
-pub(super) fn parse_number_into_optional_nonzero<'de, D>(deserializer: D) -> Result<Option<NonZeroU32>, D::Error>
+pub(super) fn parse_number_into_optional_nonzero<'de, D>(
+    deserializer: D,
+) -> Result<Option<NonZeroU32>, D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -72,7 +74,7 @@ where
             if value > u32::MAX as u64 {
                 Err(E::invalid_type(
                     serde::de::Unexpected::Unsigned(value as u64),
-                    &"an unsigned integer between 0 to 4294967295"
+                    &"an unsigned integer between 0 to 4294967295",
                 ))
             } else {
                 Ok(NonZeroU32::new(value as u32))
@@ -86,12 +88,12 @@ where
             if value > u32::MAX as i64 {
                 Err(E::invalid_type(
                     serde::de::Unexpected::Signed(value),
-                    &"an unsigned integer between 0 to 4294967295"
+                    &"an unsigned integer between 0 to 4294967295",
                 ))
             } else if value < u32::MIN as i64 {
                 Err(E::invalid_type(
                     serde::de::Unexpected::Signed(value),
-                    &"an unsigned integer"
+                    &"an unsigned integer",
                 ))
             } else {
                 Ok(NonZeroU32::new(value as u32))
