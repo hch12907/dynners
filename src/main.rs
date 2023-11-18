@@ -134,7 +134,7 @@ fn main() {
 
             DdnsConfigService::Ipv64(ip) => Box::new(ipv64::Service::from(ip.clone())),
 
-            DdnsConfigService::Porkbun(pb) => Box::new(porkbun::Service::from(pb.clone())),
+            DdnsConfigService::PorkbunV3(pb) => Box::new(porkbun::Service::from(pb.clone())),
 
             DdnsConfigService::Selfhost(sh) => Box::new(selfhost::Service::from(sh.clone())),
 

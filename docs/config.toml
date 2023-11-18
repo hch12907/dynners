@@ -38,12 +38,12 @@
     version = 6
     method = "interface"
 
-    # For the "interface" service, the available configuration options are:
+    # For the "interface" method, the available configuration options are:
     # - iface: the IP address of this interface will be used.
     # - matches: only use this IP address if it matches the netmask.
     #            Defaults to "::/0" or "0/0".
-    #            Note that non-CIDR notation can also be used: "::/::ffff"
-    #            matches all IPv6 addresses ending with 0000.
+    #            Note that non-CIDR notation can also be used: "::abcd/::ffff"
+    #            matches all IPv6 addresses ending with "abcd".
     iface = "wlan0"
     matches = "2000::/3"
 
@@ -51,21 +51,26 @@
     version = 4
     method = "exec"
 
-    # For the "exec" service, the available configuration options are:
+    # For the "exec" method, the available configuration options are:
     # - command: the command which will be executed. The stdout is expected
-    #            to be an IP address.
+    #            to be an IP address. Normally `/bin/bash` is used, see
+    #            "shell" in the [general] section.
     command = "natpmpc | grep 'Public IP' | cut -d ' ' -f5"
 
 [ip.name3]
     version = 6
     method = "http"
 
-    # For the "http" service, the available configuration options are:
+    # For the "http" method, the available configuration options are:
     #  - url: connect to this URL and send a HTTP GET request to obtain the
     #         external IP address.
     #  - regex: run this regular expression on the HTTP response, the first
     #           capture group will be the IP address.
     #           (NOTE: only available when compiled with the feature "regex")
+    #
+    # If you are using this method, make sure your update rate is long enough
+    # so that you are not banned by the HTTP service you are using (10 to
+    # 30 minutes is recommended). 
     url = "https://api6.ipify.org/"
     regex = "(.*)"
 
@@ -84,13 +89,21 @@
 # IP addresses are allowed in those two options, if the first IP address is
 # unusable (an error flag is set) then the next one will be attempted.
 #
+# In the case of dual-stacking (IPv4+IPv6), the first usable IPv4 address and
+# the first usable IPv6 address will be used to update the record.
+#
 # NOTE that some services require you to pre-create DNS records on their own   
 # website, notably Porkbun (the edit operation will succeed, but no actual
 # changes are made). Best to create your A and/or AAAA records before starting
 # the daemon.
 #
-# The configuration options will be provided below. 
-# 
+# The configuration options are:
+#  - service: the DDNS provider to use.
+#  - ip: a list of IPs which are possibly used to update the domains.
+#  - domains: a list of domains that is updated using the set of IPs in `ip`.
+#
+# The other options are provider-dependent, see below.
+#
 [ddns."cloudflare-example"]
     service = "cloudflare-v4"
     ip = ["name1", "name2", "name3"]
@@ -142,8 +155,10 @@
     domains = "example.com"
 
 [ddns."porkbun-example"]
-    service = "porkbun"
+    service = "porkbun-v3"
     ip = ["name1", "name2"]
+
+    # Remember to enable API access on your domain. 
     secret_api_key = "sk1_key"
     api_key = "pk1_key"
     domains = ["example.com"]
@@ -158,4 +173,7 @@
 [ddns."hello, this is a dummy!"]
     service = "dummy"
     ip = ["name1", "name2"]
+
+    # This service is for debugging uses. Use it if you want to confirm that
+    # the proper IP addresses are being used to update your domains.
     domains = "example.dummy"
