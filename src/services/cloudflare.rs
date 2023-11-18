@@ -40,8 +40,8 @@ enum RecordKind {
     Aaaa,
 }
 
-impl Service {
-    pub fn from_config(config: Config) -> Self {
+impl From<Config> for Service {
+    fn from(config: Config) -> Self {
         let mut config = config;
         config.token = (String::from("Bearer ") + &config.token).into();
         Self {
@@ -49,7 +49,9 @@ impl Service {
             cached_records: Vec::new(),
         }
     }
+}
 
+impl Service {
     fn parse_error(&self, response: Response) -> Result<(u32, Box<str>), String> {
         let resp_json = response
             .into_json::<serde_json::Value>()

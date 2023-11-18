@@ -23,11 +23,13 @@ pub struct Service {
     config: Config,
 }
 
-impl Service {
-    pub fn from_config(config: Config) -> Self {
+impl From<Config> for Service {
+    fn from(config: Config) -> Self {
         Self { config }
     }
+}
 
+impl Service {
     fn parse_error(error: Error) -> Result<Infallible, DdnsUpdateError> {
         match error {
             Error::Status(code, resp) if code < 500 => {

@@ -10,8 +10,8 @@ pub struct Service {
     inner: shared_dyndns::Service,
 }
 
-impl Service {
-    pub fn from_config(config: Config) -> Self {
+impl From<Config> for Service {
+    fn from(config: Config) -> Self {
         Self {
             inner: shared_dyndns::Service::from_config(
                 "Dynu",

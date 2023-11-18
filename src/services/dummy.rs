@@ -16,8 +16,8 @@ pub struct Service {
     config: Config,
 }
 
-impl Service {
-    pub fn from_config(config: Config) -> Self {
+impl From<Config> for Service {
+    fn from(config: Config) -> Self {
         Self { config }
     }
 }
