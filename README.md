@@ -9,9 +9,9 @@ make the assumption that each internet-connected device has only one IPv4 and
 possibly one IPv6 address. Instead, you tell dynners to gather a list of IP addresses
 and assign them to the DDNS providers as how you like it.
 
-This allows me to run different services on different randomized IPv6 addresses,
-so that someone who knows for instance the IP address to my HTTP server, would
-(presumably) not also know the IP address to my SSH server.
+>This allows me to run different services on different randomized IPv6 addresses,
+>so that someone who knows for instance the IP address to my HTTP server, would
+>(presumably) not also know the IP address to my SSH server.
 
 ## Supported providers
 Currently, the following DDNS providers are supported:
@@ -50,8 +50,8 @@ config.toml for an up-to-date list.
 
 ## Usage
 `dynners` does not have a CLI implementation. To use it, a config file must be provided.
-The file [config.toml](./examples/config.toml) located at the root of this repository is
-a good starting point.
+The file [config.toml](./docs/config.toml) located in the `docs` directory of this
+repository is a good starting point.
 
 The simplest configuration file will look something like this:
 

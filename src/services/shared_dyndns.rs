@@ -17,6 +17,9 @@ pub struct Config {
     domains: Vec<Box<str>>,
 }
 
+/// This is a shared implementation for all services using DynDNS v2 as their
+/// API. All services using this implementation must provide a `name` which is
+/// human-readable (it shows up in the logs) and the URL to the `server`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Service {
     name: &'static str,
@@ -123,6 +126,9 @@ impl DdnsService for Service {
 
                     Err(DdnsUpdateError::DynDns(self.name, error_message.into()))
                 } else {
+                    // The user has done something wrong (or we have done something
+                    // wrong). Suspend the updating of this service indefinitely or
+                    // we risk having our client / user agent banned.
                     self.suspended = Suspension::Indefinite;
 
                     let resp = if resp.starts_with("!donator") {

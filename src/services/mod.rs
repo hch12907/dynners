@@ -59,5 +59,10 @@ pub enum DdnsUpdateError {
 }
 
 pub trait DdnsService {
+    /// Update the DNS records with the given IP addresses. If the update succeeds,
+    /// one or two IP addresses (one for IPv4 and one for IPv6) will be returned.
+    /// This does mean that it is not possible to set more than one IPv4/IPv6
+    /// address for a given domain, but many DDNS services already don't support
+    /// that.
     fn update_record(&mut self, ip: &[IpAddr]) -> Result<FixedVec<IpAddr, 2>, DdnsUpdateError>;
 }

@@ -94,6 +94,10 @@
 [ddns."cloudflare-example"]
     service = "cloudflare-v4"
     ip = ["name1", "name2", "name3"]
+
+    # This uses Cloudflare API v4 to update the domains.
+    # Your token must have the permissions "Zone - DNS - Edit" and
+    # "Zone - Zone - Read" enabled for the zone your domain is located in. 
     token = ""
     ttl = 300
     proxied = true
@@ -129,8 +133,12 @@
 [ddns."ipv64-example"]
     service = "ipv64"
     ip = ["name1", "name2"]
+
+    # For IPv64, the username can be anything. The password is to be your Domain
+    # Update Token. To obtain it, go to Domain Informationen, view your Domain
+    # Update URL, and extract your token from the parameter key=TOKEN_HERE.
     username = "anything-goes-here"
-    password = ""
+    password = "ihrer-token-hier"
     domains = "example.com"
 
 [ddns."porkbun-example"]

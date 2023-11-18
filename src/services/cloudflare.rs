@@ -90,7 +90,7 @@ impl Service {
                 .map_err(|e| DdnsUpdateError::Json(e.to_string().into()))?,
             Err(Error::Status(_, resp)) => {
                 let (code, message) = self.parse_error(resp).map_err(|ref e| {
-                    let error = String::from("(!!) unexpected error message structure - ");
+                    let error = String::from("unexpected error message structure - ");
                     DdnsUpdateError::Json((error + e).into_boxed_str())
                 })?;
                 Err(DdnsUpdateError::Cloudflare(code, message.into()))?
