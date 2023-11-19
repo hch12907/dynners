@@ -106,7 +106,7 @@ impl Request {
         // UNWRAP-SAFETY: HTTP is supported.
         self.curl.http_headers(self.header_list).unwrap();
 
-        let mut response = Vec::with_capacity(8192);
+        let mut response = Vec::with_capacity(1024);
         let mut transfer = self.curl.transfer();
 
         transfer
