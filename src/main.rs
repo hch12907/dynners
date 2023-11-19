@@ -73,6 +73,11 @@ fn main() {
 
     let update_rate = config.general.update_rate;
 
+    println!("dynners v{} started, updating every {} second(s)",
+        env!("CARGO_PKG_VERSION"),
+        update_rate.map(|x| u32::from(x)).unwrap_or(0)
+    );
+
     // It's safe to unwrap here - the program is single-threaded and USER_AGENT
     // is never initialized before reaching this point of program.
     GENERAL_CONFIG.set(config.general).unwrap();
