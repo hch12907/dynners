@@ -169,6 +169,7 @@ fn main() {
             let ips = service_ips[name]
                 .iter()
                 .map(|name| &ips[name])
+                .filter(|ip| ip.is_dirty())
                 .filter_map(|ip| ip.address())
                 .cloned()
                 .collect::<Vec<_>>(); // TODO: use collect_into in the future
