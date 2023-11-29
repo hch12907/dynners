@@ -114,14 +114,14 @@ mod os {
                 let mut split = line.split_ascii_whitespace();
 
                 // Note, this consumes an element...
-                let Some(address) = split.nth(0) else {
+                let Some(address) = split.next() else {
                     continue;
                 };
 
                 // ... so that's why this is not nth(4).
                 let Some(flags) = split.nth(3) else { continue };
 
-                let Some(inet_iface) = split.nth(0) else {
+                let Some(inet_iface) = split.next() else {
                     continue;
                 };
 

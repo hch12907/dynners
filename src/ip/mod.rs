@@ -3,7 +3,7 @@ mod http;
 mod interface;
 mod netmask;
 
-use std::net::IpAddr;
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 #[cfg(feature = "regex")]
 use regex::Regex;
@@ -170,7 +170,7 @@ impl DynamicIp {
 
     pub fn update(&mut self) -> Result<(), DynamicIpError> {
         let new_ip = match self.service {
-            IpService::ExecV4 { ref command } => exec::execute_command_v4(&command)
+            IpService::ExecV4 { ref command } => exec::execute_command_for_ip::<Ipv4Addr>(&command)
                 .map(IpAddr::from)
                 .map_err(|e| DynamicIpError::ExecutionFailure(e.into())),
 
@@ -182,16 +182,16 @@ impl DynamicIp {
                 .ok_or(DynamicIpError::InterfaceFailure),
 
             #[cfg(not(feature = "regex"))]
-            IpService::HttpV4 { ref url } => http::get_address_v4(url)
+            IpService::HttpV4 { ref url } => http::get_address::<Ipv4Addr>(url)
                 .map(IpAddr::from)
                 .map_err(|e| DynamicIpError::HttpFailure(e.into())),
 
             #[cfg(feature = "regex")]
-            IpService::HttpV4 { ref url, ref regex } => http::get_address_v4(url, regex)
+            IpService::HttpV4 { ref url, ref regex } => http::get_address::<Ipv4Addr>(url, regex)
                 .map(IpAddr::from)
                 .map_err(|e| DynamicIpError::HttpFailure(e.into())),
 
-            IpService::ExecV6 { ref command } => exec::execute_command_v6(&command)
+            IpService::ExecV6 { ref command } => exec::execute_command_for_ip::<Ipv6Addr>(&command)
                 .map(IpAddr::from)
                 .map_err(|e| DynamicIpError::ExecutionFailure(e.into())),
 
@@ -203,12 +203,12 @@ impl DynamicIp {
                 .ok_or(DynamicIpError::InterfaceFailure),
 
             #[cfg(not(feature = "regex"))]
-            IpService::HttpV6 { ref url } => http::get_address_v6(url)
+            IpService::HttpV6 { ref url } => http::get_address::<Ipv6Addr>(url)
                 .map(IpAddr::from)
                 .map_err(|e| DynamicIpError::HttpFailure(e.into())),
 
             #[cfg(feature = "regex")]
-            IpService::HttpV6 { ref url, ref regex } => http::get_address_v6(url, regex)
+            IpService::HttpV6 { ref url, ref regex } => http::get_address::<Ipv6Addr>(url, regex)
                 .map(IpAddr::from)
                 .map_err(|e| DynamicIpError::HttpFailure(e.into())),
         }?;
