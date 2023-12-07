@@ -35,8 +35,8 @@ impl Response {
     }
 
     pub fn into_string(self) -> Result<String, io::Error> {
-        let mut vec = vec![0; 1024];
-        let read = self.reader.take(2 * 1024 * 1024).read(&mut vec)?;
+        let mut vec = Vec::with_capacity(1024);
+        let read = self.reader.take(2 * 1024 * 1024).read_to_end(&mut vec)?;
         vec.resize(read, 0);
         String::from_utf8(vec).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
     }
