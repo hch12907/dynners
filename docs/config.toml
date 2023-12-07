@@ -17,6 +17,13 @@
     # You should append your device model to the user agent string.
     user_agent = "github.com/hch12907/dynners 0.1.0"
 
+    # Location where the persistent state is stored. This persistent state
+    # stores the IP addresses we obtained in the last session. This way, we
+    # don't update unnecessarily when the user decides to restart the program.
+    #
+    # By default, this is "./persistence".
+    persistent_state = "./persistence"
+
 # A list of IP addresses which will be used to update the DDNS records.
 #
 # You must specify the IP version for each of the entries.

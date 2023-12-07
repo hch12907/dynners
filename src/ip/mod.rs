@@ -100,7 +100,7 @@ impl IpService {
             }
 
             #[cfg(not(feature = "regex"))]
-            (IpVersion::V4, IpConfigMethod::Http { url }) => Ok(Self::HttpV4 { url: url.clone() }),
+            (IpVersion::V4, IpConfigMethod::Http { url, .. }) => Ok(Self::HttpV4 { url: url.clone() }),
 
             #[cfg(feature = "regex")]
             (IpVersion::V4, IpConfigMethod::Http { url, regex }) => {
@@ -135,7 +135,7 @@ impl IpService {
             }
 
             #[cfg(not(feature = "regex"))]
-            (IpVersion::V6, IpConfigMethod::Http { url }) => Ok(Self::HttpV6 { url: url.clone() }),
+            (IpVersion::V6, IpConfigMethod::Http { url, .. }) => Ok(Self::HttpV6 { url: url.clone() }),
 
             #[cfg(feature = "regex")]
             (IpVersion::V6, IpConfigMethod::Http { url, regex }) => {
@@ -222,5 +222,9 @@ impl DynamicIp {
         self.address = Some(new_ip);
 
         Ok(())
+    }
+
+    pub fn update_from_cache(&mut self, address: IpAddr) {
+        self.address = Some(address);
     }
 }

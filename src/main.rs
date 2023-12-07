@@ -2,15 +2,17 @@ mod config;
 mod http;
 mod ip;
 mod services;
+mod persistence;
 mod util;
 
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, BufReader, BufWriter};
 use std::sync::OnceLock;
 use std::time::Duration;
 
 use config::{Config, General};
+use persistence::PersistentState;
 
 const CONFIG_PATHS: [&'static str; 2] = [
     "./config.toml",
@@ -18,6 +20,8 @@ const CONFIG_PATHS: [&'static str; 2] = [
     "/etc/dynners/config.toml",
 ];
 
+/// This stores config values specified inside the [general] section of
+/// config.toml.
 static GENERAL_CONFIG: OnceLock<General> = OnceLock::new();
 
 fn check_curl_version() {
@@ -44,29 +48,57 @@ fn check_curl_version() {
 fn main() {
     check_curl_version();
 
-    let mut config = String::new();
+    let mut config_str = String::new();
+
     for path in CONFIG_PATHS {
         let mut file = match File::open(path) {
             Ok(f) => f,
             Err(_) => continue,
         };
 
-        match file.read_to_string(&mut config) {
+        match file.read_to_string(&mut config_str) {
             Ok(_) => break,
             Err(e) => println!("Unable to read config file, reason: {}", e.to_string()),
         }
     }
 
-    if config.is_empty() {
+    if config_str.is_empty() {
         println!("No configuration found. Quitting.");
         return;
     }
 
+    // Calculating the hash of current config file
+    let config_hash = PersistentState::new(&config_str).config_hash;
+
     // Parsing the config file
-    let config = match toml::from_str::<Config>(config.as_str()) {
+    let config = match toml::from_str::<Config>(config_str.as_str()) {
         Ok(conf) => conf,
         Err(e) => return println!("{}", e.to_string()),
     };
+
+    // Reading and parsing the persistent state
+    let mut persistent_state = 'block: {
+        let file = match File::open(config.general.persistent_state.as_ref()) {
+            Ok(f) => f,
+            Err(_) => break 'block PersistentState::new(&config_str),
+        };
+
+        match PersistentState::from_reader(BufReader::new(file)) {
+            Ok(state) => {
+                println!("[INFO] Loaded persistent state.");
+                state
+            },
+
+            Err(e) => {
+                println!("[WARN] Couldn't read persistent state file, reason: {}", e.to_string());
+                PersistentState::new(&config_str)
+            },
+        }
+    };
+    
+    if !persistent_state.validate_against(&config_str) {
+        println!("[INFO] Discarded the persistent state because config file has changed.")
+    }
 
     let update_rate = config.general.update_rate;
 
@@ -83,10 +115,15 @@ fn main() {
     // Collect IP addresses specified in [ip.*] entries into (ip name, ip)
     let mut ips = HashMap::with_capacity(config.ip.len());
     for (name, ip) in config.ip.into_iter() {
-        let dyn_ip = match ip::DynamicIp::from_config(&ip) {
+        let mut dyn_ip = match ip::DynamicIp::from_config(&ip) {
             Ok(d) => d,
             Err(e) => return println!("Unable to parse IP configuration: {}", e.to_string()),
         };
+
+        if let Some(ip) = persistent_state.ip_addresses.get(&name) {
+            println!("[INFO] Initialized IP {} using the persistent state with {}", &name, &ip);
+            dyn_ip.update_from_cache(ip.clone());
+        }
 
         ips.insert(name, dyn_ip);
     }
@@ -96,7 +133,7 @@ fn main() {
         return;
     }
 
-    // Collect IP addresses specified in [ddns.*] entries into (ddns name, ip)
+    // Collect IP addresses specified in [ddns.*] entries into (ddns name, ip name)
     let service_ips = config
         .ddns
         .iter()
@@ -130,6 +167,8 @@ fn main() {
 
     // Main loop here
     loop {
+        let mut is_ip_updated = false;
+
         for (name, ip) in &mut ips {
             if let Err(e) = ip.update() {
                 println!(
@@ -145,6 +184,8 @@ fn main() {
                 .iter()
                 .map(|name| &ips[name])
                 .any(|ip| ip.is_dirty());
+
+            is_ip_updated |= is_dirty;
 
             if !is_dirty {
                 continue;
@@ -179,6 +220,37 @@ fn main() {
                     )
                 }
             };
+        }
+
+        // We only update the persistent state if any of the IPs have changed.
+        if is_ip_updated {
+            persistent_state = PersistentState::new_with_config_hash(config_hash);
+            persistent_state.ip_addresses = ips
+                .iter()
+                .flat_map(|(name, dyn_ip)|
+                    dyn_ip.address().map(|ip| (name.clone(), ip.clone()))
+                )
+                .collect();
+
+            let path = GENERAL_CONFIG.get().unwrap().persistent_state.as_ref();
+
+            let file = match File::create(path) {
+                Ok(f) => Some(f),
+                Err(_) if path.is_empty() => None,
+                Err(e) => {
+                    println!("[WARN] Couldn't open persistent state file for writing: {}", e.to_string());
+                    None
+                }
+            };
+
+            if let Some(file) = file {
+                match persistent_state.write_to(BufWriter::new(file)){
+                    Ok(_) => (),
+                    Err(e) => {
+                        println!("[WARN] Couldn't write to persistent state file: {}", e.to_string());
+                    }
+                }
+            }
         }
 
         if let Some(sleep_for) = &update_rate {

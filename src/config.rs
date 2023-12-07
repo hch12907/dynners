@@ -15,6 +15,8 @@ pub struct General {
     pub shell: Box<str>,
     #[serde(default = "default_user_agent")]
     pub user_agent: Box<str>,
+    #[serde(default = "default_persistent_state")]
+    pub persistent_state: Box<str>,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq)]
@@ -34,8 +36,7 @@ pub enum IpConfigMethod {
 
     Http {
         url: Box<str>,
-
-        #[cfg(feature = "regex")]
+        
         #[serde(default = "default_regex")]
         regex: Box<str>,
     },
@@ -118,7 +119,10 @@ fn default_shell() -> Box<str> {
     "/bin/bash".into()
 }
 
-#[cfg(feature = "regex")]
 fn default_regex() -> Box<str> {
     "(.*)".into()
+}
+
+fn default_persistent_state() -> Box<str> {
+    "/var/lib/dynners/persistence".into()
 }
