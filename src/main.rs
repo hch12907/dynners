@@ -10,10 +10,7 @@ use std::io::Read;
 use std::sync::OnceLock;
 use std::time::Duration;
 
-use config::{Config, DdnsConfigService, General};
-use services::*;
-
-use crate::services::cloudflare;
+use config::{Config, General};
 
 const CONFIG_PATHS: [&'static str; 2] = [
     "./config.toml",
@@ -73,7 +70,8 @@ fn main() {
 
     let update_rate = config.general.update_rate;
 
-    println!("dynners v{} started, updating every {} second(s)",
+    println!(
+        "dynners v{} started, updating every {} second(s)",
         env!("CARGO_PKG_VERSION"),
         update_rate.map(|x| u32::from(x)).unwrap_or(0)
     );
@@ -125,27 +123,8 @@ fn main() {
 
     // Initialize each DDNS service entry into a `services` array
     let mut services = Vec::new();
-    for (name, service) in &config.ddns {
-        let service: Box<dyn DdnsService> = match &service.service {
-            DdnsConfigService::CloudflareV4(cf) => Box::new(cloudflare::Service::from(cf.clone())),
-
-            DdnsConfigService::NoIp(np) => Box::new(noip::Service::from(np.clone())),
-
-            DdnsConfigService::DnsOMatic(dom) => Box::new(dnsomatic::Service::from(dom.clone())),
-
-            DdnsConfigService::Duckdns(dk) => Box::new(duckdns::Service::from(dk.clone())),
-
-            DdnsConfigService::Dynu(du) => Box::new(dynu::Service::from(du.clone())),
-
-            DdnsConfigService::Ipv64(ip) => Box::new(ipv64::Service::from(ip.clone())),
-
-            DdnsConfigService::PorkbunV3(pb) => Box::new(porkbun::Service::from(pb.clone())),
-
-            DdnsConfigService::Selfhost(sh) => Box::new(selfhost::Service::from(sh.clone())),
-
-            DdnsConfigService::Dummy(dm) => Box::new(dummy::Service::from(dm.clone())),
-        };
-
+    for (name, service_conf) in &config.ddns {
+        let service = service_conf.service.clone().to_boxed();
         services.push((name, service))
     }
 

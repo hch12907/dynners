@@ -4,7 +4,7 @@ use std::num::NonZeroU32;
 use serde_derive::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
-use crate::services;
+use crate::services::*;
 use crate::util::{one_or_more_string, parse_number_into_optional_nonzero};
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq)]
@@ -59,15 +59,39 @@ pub struct IpConfig {
 #[serde(tag = "service")]
 #[serde(rename_all = "kebab-case")]
 pub enum DdnsConfigService {
-    CloudflareV4(services::cloudflare::Config),
-    DnsOMatic(services::dnsomatic::Config),
-    Duckdns(services::duckdns::Config),
-    Dynu(services::dynu::Config),
-    Ipv64(services::dynu::Config),
-    PorkbunV3(services::porkbun::Config),
-    Selfhost(services::dynu::Config),
-    NoIp(services::noip::Config),
-    Dummy(services::dummy::Config),
+    CloudflareV4(cloudflare::Config),
+    DnsOMatic(dnsomatic::Config),
+    Duckdns(duckdns::Config),
+    Dynu(dynu::Config),
+    Ipv64(dynu::Config),
+    PorkbunV3(porkbun::Config),
+    Selfhost(dynu::Config),
+    NoIp(noip::Config),
+    Dummy(dummy::Config),
+}
+
+impl DdnsConfigService {
+    pub fn to_boxed(self) -> Box<dyn DdnsService> {
+        match self {
+            DdnsConfigService::CloudflareV4(cf) => Box::new(cloudflare::Service::from(cf)),
+
+            DdnsConfigService::NoIp(np) => Box::new(noip::Service::from(np)),
+
+            DdnsConfigService::DnsOMatic(dom) => Box::new(dnsomatic::Service::from(dom)),
+
+            DdnsConfigService::Duckdns(dk) => Box::new(duckdns::Service::from(dk)),
+
+            DdnsConfigService::Dynu(du) => Box::new(dynu::Service::from(du)),
+
+            DdnsConfigService::Ipv64(ip) => Box::new(ipv64::Service::from(ip)),
+
+            DdnsConfigService::PorkbunV3(pb) => Box::new(porkbun::Service::from(pb)),
+
+            DdnsConfigService::Selfhost(sh) => Box::new(selfhost::Service::from(sh)),
+
+            DdnsConfigService::Dummy(dm) => Box::new(dummy::Service::from(dm)),
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq)]
