@@ -51,7 +51,7 @@ fn hash_bytes(s: &[u8]) -> u64 {
         hash2 += *byte as u32;
     }
 
-    (hash1 as u64) | (hash2.0 as u64)
+    ((hash1 as u64) << 32) | (hash2.0 as u64)
 }
 
 impl PersistentState {
