@@ -4,6 +4,11 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::num::Wrapping;
 use std::time::{UNIX_EPOCH, SystemTime};
 
+/// The current persistent state file version. The program must reject state
+/// files newer than this, and must upgrade or reject state files older than
+/// this.
+const STATE_VERSION: u32 = 1;
+
 /// This struct stores all program states that will survive between multiple
 /// sessions. This is to prevent dynners from sending excessive update requests
 /// to the DDNS providers in scenarios like user restarting the program.
@@ -66,7 +71,7 @@ impl PersistentState {
         };
 
         Self {
-            version: 1,
+            version: STATE_VERSION,
             update_timestamp: current_timestamp,
             config_hash,
             ip_addresses: HashMap::new(),
@@ -121,6 +126,12 @@ impl PersistentState {
         // UNWRAP-SAFETY: length is confirmed to be 4 bytes by read_field()
         // This will be a common theme in this function
         let version = <[u8; 4]>::try_from(&*version).unwrap();
+
+        // Reject newer persistence state files.
+        if u32::from_le_bytes(version) > STATE_VERSION {
+            let message = "the persistent state file is too new";
+            Err(io::Error::new(io::ErrorKind::Unsupported, message))?   
+        }
 
         let update_timestamp = read_field(&mut iter, "update timestamp", 8)?;
         let update_timestamp = <[u8; 8]>::try_from(&*update_timestamp).unwrap();
