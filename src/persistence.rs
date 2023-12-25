@@ -1,8 +1,8 @@
 use std::collections::HashMap;
-use std::io::{self, Read, Write, Bytes};
+use std::io::{self, Bytes, Read, Write};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::num::Wrapping;
-use std::time::{UNIX_EPOCH, SystemTime};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 /// The current persistent state file version. The program must reject state
 /// files newer than this, and must upgrade or reject state files older than
@@ -42,7 +42,7 @@ pub struct PersistentState {
 
 enum IpType {
     Ipv4 = 0,
-    Ipv6 = 1, 
+    Ipv6 = 1,
 }
 
 fn hash_bytes(s: &[u8]) -> u64 {
@@ -103,10 +103,7 @@ impl PersistentState {
         let mut iter = reader.bytes();
 
         let read_field = |iter: &mut Bytes<R>, name, len| {
-            let read = iter
-                .by_ref()
-                .take(len)
-                .collect::<io::Result<Box<[u8]>>>()?;
+            let read = iter.by_ref().take(len).collect::<io::Result<Box<[u8]>>>()?;
 
             if read.len() == len {
                 Ok(read)
@@ -119,18 +116,22 @@ impl PersistentState {
         let magic = read_field(&mut iter, "magic", 8)?;
         if *magic != *b"dynners\0" {
             let message = "unexpected file format: invalid magic";
-            Err(io::Error::new(io::ErrorKind::InvalidInput, message))?   
+            Err(io::Error::new(io::ErrorKind::InvalidInput, message))?
         }
 
         let version = read_field(&mut iter, "version", 4)?;
         // UNWRAP-SAFETY: length is confirmed to be 4 bytes by read_field()
         // This will be a common theme in this function
         let version = <[u8; 4]>::try_from(&*version).unwrap();
+        let version = u32::from_le_bytes(version);
 
         // Reject newer persistence state files.
-        if u32::from_le_bytes(version) > STATE_VERSION {
+        if version > STATE_VERSION {
             let message = "the persistent state file is too new";
-            Err(io::Error::new(io::ErrorKind::Unsupported, message))?   
+            Err(io::Error::new(io::ErrorKind::Unsupported, message))?
+        } else if version == 0 {
+            let message = "unexpected file format: invalid version";
+            Err(io::Error::new(io::ErrorKind::Unsupported, message))?
         }
 
         let update_timestamp = read_field(&mut iter, "update timestamp", 8)?;
@@ -145,12 +146,12 @@ impl PersistentState {
             let name_len = u32::from_le_bytes(name_len);
 
             if name_len == 0 {
-                break
+                break;
             }
 
-            let Ok(name) = String::from_utf8(
-                Vec::from(read_field(&mut iter, "version", name_len as usize)?)
-            ) else {
+            let Ok(name) =
+                String::from_utf8(Vec::from(read_field(&mut iter, "name", name_len as usize)?))
+            else {
                 let message = "unexpected non-UTF8 IP address name";
                 Err(io::Error::new(io::ErrorKind::InvalidInput, message))?
             };
@@ -172,9 +173,9 @@ impl PersistentState {
 
             ip_addresses.insert(name.into_boxed_str(), ip);
         }
-        
+
         Ok(Self {
-            version: u32::from_le_bytes(version),
+            version: version,
             update_timestamp: u64::from_le_bytes(update_timestamp),
             config_hash: u64::from_le_bytes(config_hash),
             ip_addresses,
@@ -219,24 +220,26 @@ mod tests {
     #[test]
     fn reversible() {
         // Preparation of state
-        let mut state = PersistentState::new(
-            "hello world, please hash me uwu"
-        );
-        state.ip_addresses.insert(
-            "hello".into(),
-            Ipv4Addr::new(192, 168, 100, 200).into()
-        );
-        state.ip_addresses.insert(
-            "你好".into(),
-            Ipv4Addr::new(172, 19, 10, 20).into()
-        );
+        let mut state = PersistentState::new("hello world, please hash me uwu");
+        state
+            .ip_addresses
+            .insert("hello".into(), Ipv4Addr::new(192, 168, 100, 200).into());
+        state
+            .ip_addresses
+            .insert("你好".into(), Ipv4Addr::new(172, 19, 10, 20).into());
         state.ip_addresses.insert(
             "world".into(),
-            Ipv6Addr::new(0x2001, 0xdb8, 0x1234, 0x4567, 0xcafe, 0xbabe, 0xdead, 0xbeef).into()
+            Ipv6Addr::new(
+                0x2001, 0xdb8, 0x1234, 0x4567, 0xcafe, 0xbabe, 0xdead, 0xbeef,
+            )
+            .into(),
         );
         state.ip_addresses.insert(
             "世界".into(),
-            Ipv6Addr::new(0x2001, 0xdb8, 0x1111, 0x2222, 0x1337, 0x0ff1, 0xce00, 0x4b1d).into()
+            Ipv6Addr::new(
+                0x2001, 0xdb8, 0x1111, 0x2222, 0x1337, 0x0ff1, 0xce00, 0x4b1d,
+            )
+            .into(),
         );
 
         // Actual test begins here
@@ -248,7 +251,7 @@ mod tests {
 
         buffer.set_position(0);
         let state_read = PersistentState::from_reader(buffer).unwrap();
-        
+
         assert_eq!(state.version, state_read.version);
         assert_eq!(state.update_timestamp, state_read.update_timestamp);
         assert_eq!(state.config_hash, state_read.config_hash);
@@ -259,6 +262,55 @@ mod tests {
     fn error_extravaganza() {
         // Invalid magic number
         let buffer = Cursor::new(vec![100, 121, 110, 111, 101, 114, 115, 0]);
+        assert!(PersistentState::from_reader(buffer).is_err());
+
+        // Invalid version
+        let buffer = Cursor::new(vec![
+            100, 121, 110, 110, 101, 114, 115, 0, // magic
+            1, 0, 0, 1, // version
+        ]);
+        assert!(PersistentState::from_reader(buffer).is_err());
+
+        // Invalid version
+        let buffer = Cursor::new(vec![
+            100, 121, 110, 110, 101, 114, 115, 0, // magic
+            0, 0, 0, 0, // version
+        ]);
+        assert!(PersistentState::from_reader(buffer).is_err());
+
+        // The header is entirely correct
+        let buffer = Cursor::new(vec![
+            100, 121, 110, 110, 101, 114, 115, 0, // magic
+            1, 0, 0, 0, // version
+            0, 0, 0, 0, 0, 0, 0, 0, // timestamp
+            0, 0, 0, 0, 0, 0, 0, 0, // hash
+        ]);
+        assert!(PersistentState::from_reader(buffer).is_ok());
+
+        // The name is incorrect
+        let buffer = Cursor::new(vec![
+            100, 121, 110, 110, 101, 114, 115, 0, // magic
+            1, 0, 0, 0, // version
+            0, 0, 0, 0, 0, 0, 0, 0, // timestamp
+            0, 0, 0, 0, 0, 0, 0, 0, // hash
+            1, 0, 0, 0,   // IP #1: string length
+            128, // IP #1: string name (invalid UTF-8)
+            0,   // IP #1: this is IPv4
+            198, 51, 100, 1, // IP #1: the IPv4 address
+        ]);
+        assert!(PersistentState::from_reader(buffer).is_err());
+
+        // The IP type is incorrect
+        let buffer = Cursor::new(vec![
+            100, 121, 110, 110, 101, 114, 115, 0, // magic
+            1, 0, 0, 0, // version
+            0, 0, 0, 0, 0, 0, 0, 0, // timestamp
+            0, 0, 0, 0, 0, 0, 0, 0, // hash
+            1, 0, 0, 0,   // IP #1: string length
+            128, // IP #1: string name "a"
+            0,   // IP #1: this is IPv4
+            198, 51, 100, 1, // IP #1: the IPv4 address
+        ]);
         assert!(PersistentState::from_reader(buffer).is_err());
     }
 }
