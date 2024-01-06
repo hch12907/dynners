@@ -20,7 +20,7 @@ mod os {
 
     use crate::ip::netmask::{NetworkV4, NetworkV6};
 
-    fn transverse_ifaddr(iface: &str) -> Vec<IpAddr> {
+    pub(super) fn transverse_ifaddr(iface: &str) -> Vec<IpAddr> {
         let mut ip_addrs = Vec::new();
 
         // SAFETY: if getifaddrs() succeeds, ifaddrs is guaranteed to be
@@ -86,21 +86,18 @@ mod os {
         let _ = iface;
 
         // TODO: I have no idea how to do this on BSDs.
-        //
-        // Also, the loop below is just a poor man's goto: there is only one
-        // iteration and "break" simply means "jump to the end of this block".
         #[cfg(target_os = "linux")]
-        loop {
+        'outer: {
             use std::fs::File;
             use std::io::Read;
 
             let Ok(mut file) = File::open("/proc/net/if_inet6") else {
-                break;
+                break 'outer;
             };
 
             let mut content = String::new();
             let Ok(_) = file.read_to_string(&mut content) else {
-                break;
+                break 'outer;
             };
 
             // Here is an example line in /proc/net/if_inet6:
@@ -133,19 +130,14 @@ mod os {
                     continue;
                 };
 
-                let Ok(flags) = u8::from_str_radix(flags, 16) else {
+                let Ok(flags) = u32::from_str_radix(flags, 16) else {
                     continue;
                 };
 
-                // Defined in <linux/if_addr.h>:
-                const IFA_F_DEPRECATED: u8 = 0x20;
-
-                if flags & IFA_F_DEPRECATED > 0 {
+                if flags & libc::IFA_F_DEPRECATED > 0 {
                     addresses.push(Ipv6Addr::from(address))
                 }
             }
-
-            break;
         }
 
         addresses
@@ -165,28 +157,30 @@ mod os {
     }
 
     pub fn get_interface_v6_addresses(iface: &str, mask: &NetworkV6) -> Option<Ipv6Addr> {
-        let mut result = None;
-
         let deprecated = get_deprecated_v6_addresses(iface);
 
-        for addr in transverse_ifaddr(iface) {
-            match addr {
-                IpAddr::V6(v6) => {
-                    if mask.in_range(v6) && deprecated.iter().find(|ip| **ip == v6).is_none() {
-                        result = Some(v6)
-                    }
-                }
-                _ => (),
-            }
-        }
-
-        result
+        transverse_ifaddr(iface)
+            .iter()
+            .filter_map(|ip| match ip {
+                IpAddr::V6(v6) => Some(*v6),
+                _ => None,
+            })
+            .filter(|v6| mask.in_range(*v6) && !deprecated.iter().any(|ip| *v6 == *ip))
+            .last()
     }
 }
 
-#[cfg(tests)]
+#[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    pub fn get_addresses() {
+        #[cfg(target_family = "unix")]
+        {
+            assert!(!os::transverse_ifaddr("lo").is_empty())
+        }
+    }
 
     #[test]
     pub fn network_v4() {
