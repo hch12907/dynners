@@ -6,6 +6,7 @@ pub mod dynu;
 pub mod ipv64;
 pub mod noip;
 pub mod porkbun;
+pub mod router_1;
 pub mod selfhost;
 pub mod shared_dyndns;
 
@@ -50,6 +51,9 @@ pub enum DdnsUpdateError {
 
     #[error("Porkbun returned error: {0}")]
     Porkbun(Box<str>),
+
+    #[error("Router returned error: HTTP {0} - {1}")]
+    Router1(u16, Box<str>),
 
     #[error("the daemon has suspended updating this service ({0})")]
     Suspended(Suspension),

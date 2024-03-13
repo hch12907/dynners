@@ -76,6 +76,27 @@ impl Request {
         self
     }
 
+    pub fn send_form(self, data: &str) -> Result<Response, Error> {
+        let mut request = data.as_bytes();
+
+        self.curl
+            .read_function(move |dest| {
+                let to_write = dest.len();
+                let actual_written = request.len().min(to_write);
+
+                request
+                    .by_ref()
+                    .take(actual_written)
+                    .enumerate()
+                    .for_each(|(i, byte)| dest[i] = byte);
+
+                Ok(actual_written)
+            })
+            .unwrap(); // UNWRAP-SAFETY: This is always CURLE_OK.
+
+        self.call()
+    }
+
     pub fn send_json(mut self, data: impl Serialize) -> Result<Response, Error> {
         let mut request = serde_json::to_vec(&data)
             .expect("unable to serialize data into JSON string")

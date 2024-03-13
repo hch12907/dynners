@@ -1,3 +1,5 @@
+#![feature(iter_array_chunks)]
+
 mod config;
 mod http;
 mod ip;

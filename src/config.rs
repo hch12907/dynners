@@ -68,6 +68,7 @@ pub enum DdnsConfigService {
     PorkbunV3(porkbun::Config),
     Selfhost(dynu::Config),
     NoIp(noip::Config),
+    Router1(router_1::Config),
     Dummy(dummy::Config),
 }
 
@@ -89,6 +90,8 @@ impl DdnsConfigService {
             DdnsConfigService::PorkbunV3(pb) => Box::new(porkbun::Service::from(pb)),
 
             DdnsConfigService::Selfhost(sh) => Box::new(selfhost::Service::from(sh)),
+
+            DdnsConfigService::Router1(r1) => Box::new(router_1::Service::from(r1)),
 
             DdnsConfigService::Dummy(dm) => Box::new(dummy::Service::from(dm)),
         }
