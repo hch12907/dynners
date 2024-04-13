@@ -36,7 +36,7 @@ pub enum IpConfigMethod {
 
     Http {
         url: Box<str>,
-        
+
         #[serde(default = "default_regex")]
         regex: Box<str>,
     },
@@ -65,6 +65,7 @@ pub enum DdnsConfigService {
     Duckdns(duckdns::Config),
     Dynu(dynu::Config),
     Ipv64(dynu::Config),
+    Linode(linode::Config),
     PorkbunV3(porkbun::Config),
     Selfhost(dynu::Config),
     NoIp(noip::Config),
@@ -85,6 +86,8 @@ impl DdnsConfigService {
             DdnsConfigService::Dynu(du) => Box::new(dynu::Service::from(du)),
 
             DdnsConfigService::Ipv64(ip) => Box::new(ipv64::Service::from(ip)),
+
+            DdnsConfigService::Linode(li) => Box::new(linode::Service::from(li)),
 
             DdnsConfigService::PorkbunV3(pb) => Box::new(porkbun::Service::from(pb)),
 

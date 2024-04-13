@@ -77,7 +77,7 @@
     #
     # If you are using this method, make sure your update rate is long enough
     # so that you are not banned by the HTTP service you are using (10 to
-    # 30 minutes is recommended). 
+    # 30 minutes is recommended).
     url = "https://api6.ipify.org/"
     regex = "(.*)"
 
@@ -99,7 +99,7 @@
 # In the case of dual-stacking (IPv4+IPv6), the first usable IPv4 address and
 # the first usable IPv6 address will be used to update the record.
 #
-# NOTE that some services require you to pre-create DNS records on their own   
+# NOTE that some services require you to pre-create DNS records on their own
 # website, notably Porkbun (the edit operation will succeed, but no actual
 # changes are made). Best to create your A and/or AAAA records before starting
 # the daemon.
@@ -117,7 +117,7 @@
 
     # This uses Cloudflare API v4 to update the domains.
     # Your token must have the permissions "Zone - DNS - Edit" and
-    # "Zone - Zone - Read" enabled for the zone your domain is located in. 
+    # "Zone - Zone - Read" enabled for the zone your domain is located in.
     token = ""
     ttl = 300
     proxied = true
@@ -161,11 +161,19 @@
     password = "ihrer-token-hier"
     domains = "example.com"
 
+[ddns."linode-example"]
+    service = "linode"
+    ip = ["name1", "name2"]
+
+    token = "your-token"
+    domains = ["example.com", "sub.example.com"]
+    ttl = 300
+
 [ddns."porkbun-example"]
     service = "porkbun-v3"
     ip = ["name1", "name2"]
 
-    # Remember to enable API access on your domain. 
+    # Remember to enable API access on your domain.
     secret_api_key = "sk1_key"
     api_key = "pk1_key"
     domains = ["example.com"]
