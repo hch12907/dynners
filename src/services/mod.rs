@@ -4,6 +4,7 @@ pub mod duckdns;
 pub mod dummy;
 pub mod dynu;
 pub mod ipv64;
+pub mod linode;
 pub mod noip;
 pub mod porkbun;
 pub mod selfhost;
@@ -38,6 +39,7 @@ pub enum DdnsUpdateError {
     // used when CF really returned an error
     #[error("Cloudflare returned error code {0} \"{1}\"")]
     Cloudflare(u32, Box<str>),
+
     // used when a service says it succeeded, but the returned JSON is nonsense
     #[error("received erroneous JSON: {0}")]
     Json(Box<str>),
@@ -47,6 +49,9 @@ pub enum DdnsUpdateError {
 
     #[error("{0} returned error: {1}")]
     DynDns(&'static str, Box<str>),
+
+    #[error("Linode returned error: {0}")]
+    Linode(Box<str>),
 
     #[error("Porkbun returned error: {0}")]
     Porkbun(Box<str>),

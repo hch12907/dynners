@@ -21,6 +21,7 @@ Currently, the following DDNS providers are supported:
 * DuckDNS
 * Dynu
 * IPv64
+* Linode
 * NoIP
 * Porkbun
 * selfHOST.de
