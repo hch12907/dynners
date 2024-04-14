@@ -16,8 +16,6 @@ mod os {
     use std::mem::MaybeUninit;
     use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
-    use libc;
-
     use crate::ip::netmask::{NetworkV4, NetworkV6};
 
     pub(super) fn transverse_ifaddr(iface: &str) -> Vec<IpAddr> {

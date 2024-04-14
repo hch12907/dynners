@@ -1,5 +1,4 @@
 use serde::Serialize;
-use ureq;
 
 use crate::GENERAL_CONFIG;
 
