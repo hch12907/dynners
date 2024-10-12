@@ -1,13 +1,14 @@
 mod config;
 mod http;
 mod ip;
-mod services;
 mod persistence;
+mod services;
 mod util;
 
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::{Read, BufReader, BufWriter};
+use std::fs::{self, File};
+use std::io::{self, BufReader, BufWriter, Read};
+use std::path::Path;
 use std::sync::OnceLock;
 use std::time::Duration;
 
@@ -80,6 +81,20 @@ fn main() {
     let mut persistent_state = 'block: {
         let file = match File::open(config.general.persistent_state.as_ref()) {
             Ok(f) => f,
+            Err(e) if e.kind() == io::ErrorKind::NotFound => {
+                if let Some(parent) = Path::new(config.general.persistent_state.as_ref()).parent() {
+                    if let Err(e) = fs::create_dir_all(parent) {
+                        if e.kind() != io::ErrorKind::AlreadyExists {
+                            println!(
+                                "[WARN] Unable to create parent directory for persistent state, reason: {}",
+                                e
+                            );
+                        }
+                    }
+                }
+
+                break 'block PersistentState::new(&config_str);
+            }
             Err(_) => break 'block PersistentState::new(&config_str),
         };
 
@@ -87,15 +102,18 @@ fn main() {
             Ok(state) => {
                 println!("[INFO] Loaded persistent state.");
                 state
-            },
+            }
 
             Err(e) => {
-                println!("[WARN] Couldn't read persistent state file, reason: {}", e.to_string());
+                println!(
+                    "[WARN] Couldn't read persistent state file, reason: {}",
+                    e.to_string()
+                );
                 PersistentState::new(&config_str)
-            },
+            }
         }
     };
-    
+
     if !persistent_state.validate_against(&config_str) {
         println!("[INFO] Discarded the persistent state because config file has changed.")
     }
@@ -121,7 +139,10 @@ fn main() {
         };
 
         if let Some(ip) = persistent_state.ip_addresses.get(&name) {
-            println!("[INFO] Initialized IP {} using the persistent state with {}", &name, &ip);
+            println!(
+                "[INFO] Initialized IP {} using the persistent state with {}",
+                &name, &ip
+            );
             dyn_ip.update_from_cache(ip.clone());
         }
 
@@ -227,9 +248,7 @@ fn main() {
             persistent_state = PersistentState::new_with_config_hash(config_hash);
             persistent_state.ip_addresses = ips
                 .iter()
-                .flat_map(|(name, dyn_ip)|
-                    dyn_ip.address().map(|ip| (name.clone(), ip.clone()))
-                )
+                .flat_map(|(name, dyn_ip)| dyn_ip.address().map(|ip| (name.clone(), ip.clone())))
                 .collect();
 
             let path = GENERAL_CONFIG.get().unwrap().persistent_state.as_ref();
@@ -238,16 +257,22 @@ fn main() {
                 Ok(f) => Some(f),
                 Err(_) if path.is_empty() => None,
                 Err(e) => {
-                    println!("[WARN] Couldn't open persistent state file for writing: {}", e.to_string());
+                    println!(
+                        "[WARN] Couldn't open persistent state file for writing: {}",
+                        e.to_string()
+                    );
                     None
                 }
             };
 
             if let Some(file) = file {
-                match persistent_state.write_to(BufWriter::new(file)){
+                match persistent_state.write_to(BufWriter::new(file)) {
                     Ok(_) => (),
                     Err(e) => {
-                        println!("[WARN] Couldn't write to persistent state file: {}", e.to_string());
+                        println!(
+                            "[WARN] Couldn't write to persistent state file: {}",
+                            e.to_string()
+                        );
                     }
                 }
             }
