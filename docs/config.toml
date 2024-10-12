@@ -15,7 +15,7 @@
 
     # The user agent which will be used by all HTTP requests.
     # You should append your device model to the user agent string.
-    user_agent = "github.com/hch12907/dynners 0.3.0"
+    user_agent = "github.com/hch12907/dynners 0.3.1"
 
     # Location where the persistent state is stored. This persistent state
     # stores the IP addresses we obtained in the last session. This way, we
