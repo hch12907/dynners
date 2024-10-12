@@ -74,7 +74,7 @@ impl DdnsService for Service {
 
             if let Some(ipv4) = ipv4 {
                 let url = format!(
-                    "https://porkbun.com/api/json/v3/dns/editByNameType/{}/A/{}",
+                    "https://api.porkbun.com/api/json/v3/dns/editByNameType/{}/A/{}",
                     domain, subdomain
                 );
 
@@ -97,7 +97,7 @@ impl DdnsService for Service {
 
             if let Some(ipv6) = ipv6 {
                 let url = format!(
-                    "https://porkbun.com/api/json/v3/dns/editByNameType/{}/AAAA/{}",
+                    "https://api.porkbun.com/api/json/v3/dns/editByNameType/{}/AAAA/{}",
                     domain, subdomain
                 );
 
