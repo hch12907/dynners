@@ -175,7 +175,7 @@ impl PersistentState {
         }
 
         Ok(Self {
-            version: version,
+            version,
             update_timestamp: u64::from_le_bytes(update_timestamp),
             config_hash: u64::from_le_bytes(config_hash),
             ip_addresses,
@@ -185,24 +185,24 @@ impl PersistentState {
     pub fn write_to<W: Write>(&self, writer: W) -> io::Result<()> {
         let mut writer = writer;
 
-        writer.write(b"dynners\0")?;
-        writer.write(&self.version.to_le_bytes())?;
-        writer.write(&self.update_timestamp.to_le_bytes())?;
-        writer.write(&self.config_hash.to_le_bytes())?;
+        writer.write_all(b"dynners\0")?;
+        writer.write_all(&self.version.to_le_bytes())?;
+        writer.write_all(&self.update_timestamp.to_le_bytes())?;
+        writer.write_all(&self.config_hash.to_le_bytes())?;
 
         for (name, ip) in &self.ip_addresses {
-            writer.write(&(name.len() as u32).to_le_bytes())?;
-            writer.write(name.as_bytes())?;
+            writer.write_all(&(name.len() as u32).to_le_bytes())?;
+            writer.write_all(name.as_bytes())?;
 
             match ip {
                 IpAddr::V4(v4) => {
-                    writer.write(&[IpType::Ipv4 as u8])?;
-                    writer.write(&u32::from(*v4).to_le_bytes())?;
+                    writer.write_all(&[IpType::Ipv4 as u8])?;
+                    writer.write_all(&u32::from(*v4).to_le_bytes())?;
                 }
 
                 IpAddr::V6(v6) => {
-                    writer.write(&[IpType::Ipv6 as u8])?;
-                    writer.write(&u128::from(*v6).to_le_bytes())?;
+                    writer.write_all(&[IpType::Ipv6 as u8])?;
+                    writer.write_all(&u128::from(*v6).to_le_bytes())?;
                 }
             }
         }

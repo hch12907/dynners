@@ -73,7 +73,7 @@ pub enum DdnsConfigService {
 }
 
 impl DdnsConfigService {
-    pub fn to_boxed(self) -> Box<dyn DdnsService> {
+    pub fn into_boxed(self) -> Box<dyn DdnsService> {
         match self {
             DdnsConfigService::CloudflareV4(cf) => Box::new(cloudflare::Service::from(cf)),
 

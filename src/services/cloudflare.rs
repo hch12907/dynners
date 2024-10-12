@@ -93,7 +93,7 @@ impl Service {
                     let error = String::from("unexpected error message structure - ");
                     DdnsUpdateError::Json((error + e).into_boxed_str())
                 })?;
-                Err(DdnsUpdateError::Cloudflare(code, message.into()))?
+                Err(DdnsUpdateError::Cloudflare(code, message))?
             }
             Err(Error::Transport(tp)) => {
                 Err(DdnsUpdateError::TransportError(tp.to_string().into()))?
@@ -260,9 +260,9 @@ impl DdnsService for Service {
 
         for record in &self.cached_records {
             if record.kind == RecordKind::A && ipv4.is_some() {
-                self.put_record(&record, *ipv4.unwrap())?;
+                self.put_record(record, *ipv4.unwrap())?;
             } else if record.kind == RecordKind::Aaaa && ipv6.is_some() {
-                self.put_record(&record, *ipv6.unwrap())?;
+                self.put_record(record, *ipv6.unwrap())?;
             }
         }
 

@@ -56,6 +56,9 @@ impl DdnsService for Service {
                 } else if resp.starts_with("KO") {
                     Err(DdnsUpdateError::DuckDns)
                 } else {
+                    // According to the API documentation, the only possible responses
+                    // (without setting verbose=true) are OK and KO. So theoretically
+                    // we shouldn't reach this branch... but make an error if we do
                     Err(DdnsUpdateError::DuckDns)
                 }
             }

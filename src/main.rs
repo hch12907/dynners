@@ -15,7 +15,7 @@ use std::time::Duration;
 use config::{Config, General};
 use persistence::PersistentState;
 
-const CONFIG_PATHS: [&'static str; 2] = [
+const CONFIG_PATHS: [&str; 2] = [
     "./config.toml",
     #[cfg(target_family = "unix")]
     "/etc/dynners/config.toml",
@@ -59,7 +59,7 @@ fn main() {
 
         match file.read_to_string(&mut config_str) {
             Ok(_) => break,
-            Err(e) => println!("Unable to read config file, reason: {}", e.to_string()),
+            Err(e) => println!("Unable to read config file, reason: {}", e),
         }
     }
 
@@ -74,7 +74,7 @@ fn main() {
     // Parsing the config file
     let config = match toml::from_str::<Config>(config_str.as_str()) {
         Ok(conf) => conf,
-        Err(e) => return println!("{}", e.to_string()),
+        Err(e) => return println!("{}", e),
     };
 
     // Reading and parsing the persistent state
@@ -107,7 +107,7 @@ fn main() {
             Err(e) => {
                 println!(
                     "[WARN] Couldn't read persistent state file, reason: {}",
-                    e.to_string()
+                    e
                 );
                 PersistentState::new(&config_str)
             }
@@ -123,7 +123,7 @@ fn main() {
     println!(
         "dynners v{} started, updating every {} second(s)",
         env!("CARGO_PKG_VERSION"),
-        update_rate.map(|x| u32::from(x)).unwrap_or(0)
+        update_rate.map(u32::from).unwrap_or(0)
     );
 
     // It's safe to unwrap here - the program is single-threaded and USER_AGENT
@@ -135,7 +135,7 @@ fn main() {
     for (name, ip) in config.ip.into_iter() {
         let mut dyn_ip = match ip::DynamicIp::from_config(&ip) {
             Ok(d) => d,
-            Err(e) => return println!("Unable to parse IP configuration: {}", e.to_string()),
+            Err(e) => return println!("Unable to parse IP configuration: {}", e),
         };
 
         if let Some(ip) = persistent_state.ip_addresses.get(&name) {
@@ -143,7 +143,7 @@ fn main() {
                 "[INFO] Initialized IP {} using the persistent state with {}",
                 &name, &ip
             );
-            dyn_ip.update_from_cache(ip.clone());
+            dyn_ip.update_from_cache(*ip);
         }
 
         ips.insert(name, dyn_ip);
@@ -165,7 +165,7 @@ fn main() {
     let mut errored = false;
     for (service_name, service_ips) in service_ips.iter() {
         for ip in service_ips.iter() {
-            if ips.get(ip).is_none() {
+            if !ips.contains_key(ip) {
                 println!(
                     "[FATAL] service {}: the IP {} is not specified anywhere in config",
                     service_name, ip
@@ -182,7 +182,7 @@ fn main() {
     // Initialize each DDNS service entry into a `services` array
     let mut services = Vec::new();
     for (name, service_conf) in &config.ddns {
-        let service = service_conf.service.clone().to_boxed();
+        let service = service_conf.service.clone().into_boxed();
         services.push((name, service))
     }
 
@@ -195,7 +195,7 @@ fn main() {
                 println!(
                     "[ERROR] Unable to update IP {}, reason: {}",
                     name,
-                    e.to_string()
+                    e
                 );
             }
         }
@@ -237,7 +237,7 @@ fn main() {
                     println!(
                         "[ERROR] DDNS service {} failed, reason: {}",
                         name,
-                        e.to_string()
+                        e
                     )
                 }
             };
@@ -248,7 +248,7 @@ fn main() {
             persistent_state = PersistentState::new_with_config_hash(config_hash);
             persistent_state.ip_addresses = ips
                 .iter()
-                .flat_map(|(name, dyn_ip)| dyn_ip.address().map(|ip| (name.clone(), ip.clone())))
+                .flat_map(|(name, dyn_ip)| dyn_ip.address().map(|ip| (name.clone(), *ip)))
                 .collect();
 
             let path = GENERAL_CONFIG.get().unwrap().persistent_state.as_ref();
@@ -259,7 +259,7 @@ fn main() {
                 Err(e) => {
                     println!(
                         "[WARN] Couldn't open persistent state file for writing: {}",
-                        e.to_string()
+                        e
                     );
                     None
                 }
@@ -271,7 +271,7 @@ fn main() {
                     Err(e) => {
                         println!(
                             "[WARN] Couldn't write to persistent state file: {}",
-                            e.to_string()
+                            e
                         );
                     }
                 }

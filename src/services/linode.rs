@@ -123,7 +123,7 @@ impl Service {
                 })?;
 
                 let error_message: Box<str> = if field.is_empty() {
-                    reason.into()
+                    reason
                 } else {
                     format!("{} (field = {})", reason, field).into()
                 };
@@ -281,9 +281,9 @@ impl DdnsService for Service {
 
         for record in &self.cached_records {
             if ipv4.is_some() && record.kind == RecordKind::A {
-                self.put_record(&record, *ipv4.unwrap())?;
+                self.put_record(record, *ipv4.unwrap())?;
             } else if ipv6.is_some() && record.kind == RecordKind::Aaaa {
-                self.put_record(&record, *ipv6.unwrap())?;
+                self.put_record(record, *ipv6.unwrap())?;
             }
         }
 

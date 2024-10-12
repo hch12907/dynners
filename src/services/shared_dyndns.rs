@@ -68,10 +68,10 @@ impl DdnsService for Service {
         let request = if ipv4.is_some() && ipv6.is_some() {
             let myip = ipv4.unwrap().to_string() + "," + &ipv6.unwrap().to_string();
             request.query("myip", &myip)
-        } else if ipv4.is_some() {
-            request.query("myip", &ipv4.unwrap().to_string())
-        } else if ipv6.is_some() {
-            request.query("myip", &ipv6.unwrap().to_string())
+        } else if let Some(ipv4) = ipv4 {
+            request.query("myip", &ipv4.to_string())
+        } else if let Some(ipv6) = ipv6 {
+            request.query("myip", &ipv6.to_string())
         } else {
             unreachable!()
         };

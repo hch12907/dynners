@@ -73,7 +73,7 @@ where
         {
             if value > u32::MAX as u64 {
                 Err(E::invalid_type(
-                    serde::de::Unexpected::Unsigned(value as u64),
+                    serde::de::Unexpected::Unsigned(value),
                     &"an unsigned integer between 0 to 4294967295",
                 ))
             } else {

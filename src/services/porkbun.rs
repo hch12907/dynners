@@ -68,7 +68,7 @@ impl DdnsService for Service {
 
             // UNWRAP-SAFETY: subdomain is guaranteed to be the prefix of domain
             let domain = domain
-                .strip_prefix(&subdomain)
+                .strip_prefix(subdomain)
                 .unwrap()
                 .trim_start_matches('.');
 

@@ -92,7 +92,7 @@ impl IpService {
                 let matches = matches
                     .trim()
                     .parse::<NetworkV4>()
-                    .map_err(|e| DynamicIpError::InvalidNetwork(e))?;
+                    .map_err(DynamicIpError::InvalidNetwork)?;
                 Ok(Self::InterfaceV4 {
                     iface: iface.clone(),
                     matches,
@@ -100,7 +100,9 @@ impl IpService {
             }
 
             #[cfg(not(feature = "regex"))]
-            (IpVersion::V4, IpConfigMethod::Http { url, .. }) => Ok(Self::HttpV4 { url: url.clone() }),
+            (IpVersion::V4, IpConfigMethod::Http { url, .. }) => {
+                Ok(Self::HttpV4 { url: url.clone() })
+            }
 
             #[cfg(feature = "regex")]
             (IpVersion::V4, IpConfigMethod::Http { url, regex }) => {
@@ -127,7 +129,7 @@ impl IpService {
                 let matches = matches
                     .trim()
                     .parse::<NetworkV6>()
-                    .map_err(|e| DynamicIpError::InvalidNetwork(e))?;
+                    .map_err(DynamicIpError::InvalidNetwork)?;
                 Ok(Self::InterfaceV6 {
                     iface: iface.clone(),
                     matches,
@@ -135,12 +137,14 @@ impl IpService {
             }
 
             #[cfg(not(feature = "regex"))]
-            (IpVersion::V6, IpConfigMethod::Http { url, .. }) => Ok(Self::HttpV6 { url: url.clone() }),
+            (IpVersion::V6, IpConfigMethod::Http { url, .. }) => {
+                Ok(Self::HttpV6 { url: url.clone() })
+            }
 
             #[cfg(feature = "regex")]
             (IpVersion::V6, IpConfigMethod::Http { url, regex }) => {
                 let regex =
-                    Regex::new(regex.as_ref()).map_err(|e| DynamicIpError::InvalidRegex(e))?;
+                    Regex::new(regex.as_ref()).map_err(DynamicIpError::InvalidRegex)?;
 
                 Ok(Self::HttpV6 {
                     url: url.clone(),
@@ -170,7 +174,7 @@ impl DynamicIp {
 
     pub fn update(&mut self) -> Result<(), DynamicIpError> {
         let new_ip = match self.service {
-            IpService::ExecV4 { ref command } => exec::execute_command_for_ip::<Ipv4Addr>(&command)
+            IpService::ExecV4 { ref command } => exec::execute_command_for_ip::<Ipv4Addr>(command)
                 .map(IpAddr::from)
                 .map_err(|e| DynamicIpError::ExecutionFailure(e.into())),
 
@@ -191,7 +195,7 @@ impl DynamicIp {
                 .map(IpAddr::from)
                 .map_err(|e| DynamicIpError::HttpFailure(e.into())),
 
-            IpService::ExecV6 { ref command } => exec::execute_command_for_ip::<Ipv6Addr>(&command)
+            IpService::ExecV6 { ref command } => exec::execute_command_for_ip::<Ipv6Addr>(command)
                 .map(IpAddr::from)
                 .map_err(|e| DynamicIpError::ExecutionFailure(e.into())),
 
